@@ -91,6 +91,24 @@
   .c0{background:#fff4b8;} .c1{background:#ffd6de;} .c2{background:#d7f0e3;} .c3{background:#dbe8fb;} .c4{background:#ffe2cc;} .c5{background:#ead9f7;}
   .empty{color:var(--dim);text-align:center;font-size:16px;padding:50px 10px;}
 
+  .board{position:relative;}
+  .ai-loading{position:absolute;inset:0;z-index:5;display:none;align-items:flex-start;justify-content:center;background:rgba(251,243,239,.82);backdrop-filter:blur(2px);border-radius:12px;padding:40px 16px 16px;}
+  .ai-loading.show{display:flex;}
+  .ai-card{position:sticky;top:60px;width:min(340px,100%);background:#ffd6de;font-family:var(--note-font);text-align:center;padding:30px 20px 18px;border-radius:3px 3px 16px 3px;box-shadow:0 14px 28px rgba(160,90,105,.25);transform:rotate(-1.5deg);}
+  .ai-card::before{content:"";position:absolute;top:-11px;left:50%;width:90px;height:22px;transform:translateX(-50%) rotate(-3deg);background:repeating-linear-gradient(45deg,rgba(224,132,155,.5) 0 6px,rgba(255,255,255,.7) 6px 12px);}
+  .ai-pan{font-size:44px;display:inline-block;animation:ai-stir 1s ease-in-out infinite;transform-origin:70% 70%;}
+  @keyframes ai-stir{0%,100%{transform:rotate(-12deg);}50%{transform:rotate(10deg);}}
+  .ai-card h3{margin:6px 0 4px;font-size:22px;}
+  .ai-msg{font-size:16px;min-height:26px;color:#6b4f57;}
+  .ai-dots span{display:inline-block;width:8px;height:8px;margin:0 3px;border-radius:50%;background:var(--accent);animation:ai-dot 1.2s infinite ease-in-out;}
+  .ai-dots span:nth-child(2){animation-delay:.2s;} .ai-dots span:nth-child(3){animation-delay:.4s;}
+  @keyframes ai-dot{0%,80%,100%{transform:scale(.5);opacity:.4;}40%{transform:scale(1);opacity:1;}}
+  .ai-bar{height:6px;background:rgba(255,255,255,.7);border-radius:999px;overflow:hidden;margin:12px 0 6px;}
+  .ai-bar i{display:block;height:100%;width:0;background:var(--accent);border-radius:999px;transition:width .5s ease;}
+  .ai-time{font-family:"Noto Sans TC",sans-serif;font-size:12px;color:var(--dim);}
+  .ai-card .btn{margin-top:12px;font-family:"Noto Sans TC",sans-serif;}
+  @media (prefers-reduced-motion:reduce){.ai-pan,.ai-dots span{animation:none;}}
+
   .modal-bg{position:fixed;inset:0;background:rgba(74,59,63,.45);display:none;align-items:flex-start;justify-content:center;padding:40px 16px;z-index:3000;overflow:auto;}
   .modal-bg.show{display:flex;}
   .modal{position:relative;width:min(640px,100%);font-family:var(--note-font);padding:34px 26px 22px;border-radius:4px 4px 22px 4px;box-shadow:0 20px 40px rgba(74,59,63,.3);}
@@ -217,6 +235,17 @@
 
   <section class="board" aria-label="食譜便利貼">
     <div class="notes" id="notes"></div>
+    <div class="ai-loading" id="aiLoading" role="status" aria-live="polite">
+      <div class="ai-card">
+        <span class="ai-pan">🍳</span>
+        <h3>AI 正在幫你想菜單</h3>
+        <div class="ai-msg" id="aiMsg">讀取你的冰箱食材…</div>
+        <div class="ai-dots"><span></span><span></span><span></span></div>
+        <div class="ai-bar"><i id="aiBar"></i></div>
+        <div class="ai-time" id="aiTime">已等待 0 秒</div>
+        <button class="btn" id="aiCancel" type="button">取消</button>
+      </div>
+    </div>
   </section>
 </main>
 
@@ -604,7 +633,7 @@
   $("aiKey").onchange = persistApi;
   syncApiFields();
 
-  async function callLLM(provider, model, apiKey, prompt){
+  async function callLLM(provider, model, apiKey, prompt, signal){
     var url, headers, body, extract;
     if(provider === "claude"){
       url = "https://api.anthropic.com/v1/messages";
@@ -622,7 +651,7 @@
       body = {contents:[{parts:[{text:prompt}]}]};
       extract = function(d){ var ps = (d.candidates && d.candidates[0] && d.candidates[0].content && d.candidates[0].content.parts) || []; return ps.map(function(p){ return p.text || ""; }).join(""); };
     }
-    var res = await fetch(url, {method:"POST", headers:headers, body:JSON.stringify(body)});
+    var res = await fetch(url, {method:"POST", headers:headers, body:JSON.stringify(body), signal:signal});
     var data = await res.json().catch(function(){ return {}; });
     if(!res.ok) throw new Error((data.error && (data.error.message || data.error)) || ("HTTP " + res.status));
     var t = extract(data);
@@ -642,14 +671,45 @@
       '{"name":"菜名","time":分鐘數字,"level":"簡單|中等|進階","serve":人份數字,"main":["主要食材"],"extra":["可有可無的配料"],"season":["調味料"],"steps":["步驟1","步驟2"],"tip":"一句小提示"}\n' +
       "main 請優先使用使用者提供的食材名稱，steps 3～6 步。";
   }
+  /* AI 執行狀態卡：輪播訊息＋假進度條（最多到 92%，完成才補滿）＋秒數＋取消 */
+  var AI_MSGS = ["讀取你的冰箱食材…", "翻翻家常菜筆記本…", "搭配主菜與配料…", "計算料理時間與份量…", "寫下做法步驟…", "貼上便利貼…"];
+  var aiRun = null;
+  function startAiLoading(){
+    var t0 = Date.now(), i = 0;
+    $("aiMsg").textContent = AI_MSGS[0];
+    $("aiBar").style.width = "4%";
+    $("aiTime").textContent = "已等待 0 秒";
+    $("aiLoading").classList.add("show");
+    $("aiLoading").scrollIntoView({behavior:"smooth", block:"start"});
+    var timer = setInterval(function(){
+      var sec = Math.floor((Date.now() - t0) / 1000);
+      $("aiTime").textContent = "已等待 " + sec + " 秒" + (sec >= 25 ? "（模型比較忙，再等一下）" : "");
+      $("aiBar").style.width = Math.min(92, 4 + 88 * (1 - Math.exp(-sec / 12))) + "%";
+      if(sec > 0 && sec % 3 === 0) $("aiMsg").textContent = AI_MSGS[Math.min(++i, AI_MSGS.length - 1)];
+    }, 1000);
+    return {ctrl:new AbortController(), timer:timer};
+  }
+  function stopAiLoading(done){
+    if(!aiRun) return;
+    clearInterval(aiRun.timer);
+    aiRun = null;
+    if(done){ $("aiBar").style.width = "100%"; $("aiMsg").textContent = "完成！"; setTimeout(function(){ $("aiLoading").classList.remove("show"); }, 400); }
+    else $("aiLoading").classList.remove("show");
+  }
+  $("aiCancel").onclick = function(){ if(aiRun) aiRun.ctrl.abort(); };
+
   async function generateAi(){
     persistApi();
     var key = api.keys[api.provider];
     if(!key){ document.querySelector("details.ai-box").open = true; $("aiKey").focus(); toast("請先填入 API 金鑰"); return; }
     if(!state.ings.length){ toast("請先輸入至少一樣食材"); return; }
+    if(aiRun) return;
     var btn = $("aiBtn"); btn.disabled = true; btn.textContent = "✨ AI 撰寫中…";
+    $("goBtn").disabled = true;
+    aiRun = startAiLoading();
+    var ok = false;
     try {
-      var raw = await callLLM(api.provider, api.models[api.provider], key, buildAiPrompt());
+      var raw = await callLLM(api.provider, api.models[api.provider], key, buildAiPrompt(), aiRun.ctrl.signal);
       var arr = parseJsonArray(raw).filter(function(x){ return x && x.name && Array.isArray(x.main) && Array.isArray(x.steps); });
       if(!arr.length) throw new Error("AI 沒有回傳可用的食譜");
       var fresh = arr.map(function(x){
@@ -663,13 +723,16 @@
       var aiScored = fresh.map(function(r){ var s = scoreRecipe(r, userCanon); if(!s.hit.length) s.ratio = 0; return s; });
       var rest = sortResults(RECIPES.map(function(r){ return scoreRecipe(r, userCanon); }).filter(function(s){ return s.hit.length > 0; }));
       state.results = aiScored.concat(rest).slice(0, Math.max(+$("limitSel").value, aiScored.length));
+      ok = true;
       renderNotes();
       toast("AI 新增了 " + fresh.length + " 張創意食譜便利貼");
     } catch(e){
-      toast("AI 失敗：" + e.message + "，已改用內建食譜");
-      generate();
+      if(e.name === "AbortError") toast("已取消 AI 創意食譜");
+      else { toast("AI 失敗：" + e.message + "，已改用內建食譜"); generate(); }
     } finally {
+      stopAiLoading(ok);
       btn.disabled = false; btn.textContent = "✨ AI 創意食譜";
+      $("goBtn").disabled = false;
     }
   }
   $("aiBtn").onclick = generateAi;

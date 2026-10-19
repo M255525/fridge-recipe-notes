@@ -13,7 +13,7 @@
 - 排序 `sortResults`：命中數＋配料命中×0.3＋匹配比例；另有「我的評分高」「料理時間短」。
 - 評分存 `localStorage.fridgeRecipeNotesRatings`（`{recipeId: 1~5}`），點數＝星數總和；再點同一星數＝取消。AI 食譜 id 為 `ai-<菜名hash>`，存 `fridgeRecipeNotesAiRecipes`（最多 40 筆，之後找食譜也會比對）。
 - PDF：`downloadPdf` 把 `buildPrintHtml` 填進 `#printArea`，`@media print` 只顯示它，暫改 `document.title` 為「菜名_食譜」後 `window.print()`（使用者自選「另存為 PDF」），不用 jsPDF 以避開中文字型問題。
-- 選用 BYOK AI：`callLLM`（Gemini/OpenRouter/OpenAI/Claude，格式同 line-sticker-studio），金鑰依服務商存在 `fridgeRecipeNotesApi.keys`；失敗自動退回規則式。
+- 選用 BYOK AI：`callLLM`（Gemini/OpenRouter/OpenAI/Claude，格式同 line-sticker-studio），金鑰依服務商存在 `fridgeRecipeNotesApi.keys`；失敗自動退回規則式。執行中顯示 `#aiLoading` 狀態卡（2026-10-19 使用者要求）：`startAiLoading`／`stopAiLoading` 管輪播訊息 `AI_MSGS`、假進度條（指數趨近 92%，完成才補滿）、已等待秒數、取消（AbortController 傳進 `callLLM` 的 signal）；卡片用 sticky 固定在便利貼牆頂端，不要整張卡做晃動動畫（按鈕會變成移動目標）。
 - 頂部跑馬燈共用工作區公告 GAS（滑鼠移入暫停）；頁尾警語＋創作者＋visitor-badge（`m255525.fridgerecipenotes`，手冊 `.manual`）；manual.html 有 `#creator`。
 - 測試掛鉤：`window._recipe`（state、RECIPES、generate、openDetail、rate、buildPrintHtml、downloadPdf）。驗證 PDF 用 Playwright `emulateMedia('print')`＋`page.pdf()`，不要真的按列印鈕。
 
