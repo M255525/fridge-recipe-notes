@@ -1,5 +1,7 @@
 # fridge-recipe-notes — 冰箱便利貼食譜
 
+> 2026-10-19 加入：RWD（900／640／360 斷點）、收藏、主題分頁「🍳 料理食譜／🧋 飲料製作」。
+
 單檔靜態網頁（`index.html`＋`manual.html`＋PWA）。輸入幾樣食材 → 比對內建家常食譜 → 以便利貼牆呈現 → 點開看做法、列印成 PDF、五星評分累積點數。
 
 - 本機預覽：port **8830**（`.claude/launch.json` 的 `fridge-recipe-notes`）。
@@ -7,6 +9,9 @@
 - **部署**（2026-10-19 使用者說「要」）：公開 repo <https://github.com/M255525/fridge-recipe-notes>，GitHub Pages（Actions workflow，push 到 master 自動部署）<https://m255525.github.io/fridge-recipe-notes/>。已補 `github-pages` environment 的 master 分支規則。無序號授權。
 
 ## 架構重點
+- **主題分頁**：`MODES.food`／`MODES.drink` 集中放各分頁的文字、預設材料、快速範例、配方庫（`RECIPES` 34 道／`DRINKS` 26 款，飲品物件帶 `mode:"drink"`）、時間篩選選項、AI 提示詞與狀態訊息；`M()` 取目前分頁，`modeOf(r)` 判斷配方屬於哪個分頁。材料清單分開存（`fridgeRecipeNotesIngredients`／`fridgeRecipeNotesDrinkIngredients`），目前分頁存 `fridgeRecipeNotesMode`。`renderModeUI()` 換掉所有分頁相關文字並重建時間選單。飲料分頁會把便利貼牆底色換成抹茶綠（`body.mode-drink`）。
+- **收藏**：`fridgeRecipeNotesFavorites`（id 陣列，兩分頁共用、顯示時依 `modeOf` 過濾）。便利貼是 `div[role=button]`（裡面有 ♡ 按鈕，不能用 button 包 button）；`.fav` 需 `z-index:3`，否則會被分類文字蓋住點不到。「我的收藏」檢視不管材料是否符合都列出。AI 配方修剪上限 40 筆時會保留已收藏的。
+- **RWD**：≤640px 篩選改兩欄格狀、按鈕整排、便利貼固定 2 欄；≤360px 單欄；輸入框 16px 防 iOS 縮放；`html{scroll-padding-top}` 避免被固定跑馬燈蓋住。
 - 預設值：`DEFAULT_INGREDIENTS`（雞蛋、番茄、洋蔥、豆腐、青蔥）、`PRESETS`（4 組快速範例）、`AI_DEFAULT_MODEL`。
 - `RECIPES`：34 道內建食譜，`main`＝主要食材（決定匹配度與是否顯示）、`extra`＝配料（只加權排序）、`season`＝調味料（不比對）。
 - `SYN` 同義詞表把使用者輸入轉成標準名稱（蛋→雞蛋、絞肉→豬絞肉…）；新增食譜時 `main` 要用標準名稱。`haveIt` 另外做 ≥2 字的包含比對。

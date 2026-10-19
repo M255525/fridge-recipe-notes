@@ -22,6 +22,7 @@
   }
   *{box-sizing:border-box;}
   html,body{margin:0;}
+  html{scroll-padding-top:44px;}
   body{font-family:"Noto Sans TC",system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.6;}
   a{color:var(--accent-dark);}
   button{font:inherit;cursor:pointer;}
@@ -59,7 +60,30 @@
   .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px;}
   .chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 12px;font-size:13px;}
   .chip:hover{border-color:var(--accent);color:var(--accent-dark);}
-  .row .spacer{flex:1;}
+  .mode-tabs{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:560px;margin:0 0 14px;}
+  .mode-tabs button{border:1.5px solid var(--line);background:var(--panel);border-radius:16px;padding:12px 10px;font-size:17px;font-weight:700;color:var(--dim);min-height:52px;transition:all .15s;}
+  .mode-tabs button:hover{border-color:var(--accent);color:var(--accent-dark);}
+  .mode-tabs button.on{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 6px 14px rgba(194,95,122,.28);}
+  body.mode-drink{--board:#e4efe2;}
+  body.mode-drink .board{background-image:radial-gradient(rgba(63,143,104,.15) 1px,transparent 1.6px);}
+  .controls{justify-content:space-between;}
+  .filters{display:flex;gap:8px 14px;flex-wrap:wrap;align-items:center;}
+  .actions{display:flex;gap:8px;margin-left:auto;}
+
+  .toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin:18px 0 10px;}
+  .toolbar .stats{margin:0;}
+  .view-tabs{display:inline-flex;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:4px;gap:4px;}
+  .view-tabs button{border:0;background:transparent;border-radius:999px;padding:7px 16px;font-size:14px;color:var(--dim);}
+  .view-tabs button.on{background:var(--accent);color:#fff;font-weight:700;}
+  .view-tabs b{display:inline-block;min-width:20px;margin-left:4px;padding:0 6px;border-radius:999px;background:rgba(224,132,155,.18);font-size:12px;}
+  .view-tabs button.on b{background:rgba(255,255,255,.3);}
+
+  .note .fav{position:absolute;z-index:3;top:8px;right:8px;width:36px;height:36px;border:0;border-radius:50%;background:rgba(255,255,255,.55);font-size:19px;line-height:1;color:var(--accent-dark);display:grid;place-items:center;transition:transform .15s,background .15s;}
+  .note .fav:hover{transform:scale(1.12);background:#fff;}
+  .note .fav.on{background:#fff;color:#e0485f;}
+  .fav-toggle.on{background:#ffe7ec;border-color:var(--accent);color:#e0485f;font-weight:700;}
+  .pop{animation:fav-pop .35s ease;}
+  @keyframes fav-pop{40%{transform:scale(1.35);}100%{transform:scale(1);}}
   label.inline{font-size:13px;color:var(--dim);display:inline-flex;align-items:center;gap:6px;}
   select,input[type=text],input[type=password]{font:inherit;font-size:14px;border:1px solid var(--line);border-radius:8px;padding:6px 8px;background:#fff;color:var(--ink);}
 
@@ -141,13 +165,49 @@
   #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
 
   #printArea{display:none;}
-  @media (max-width:560px){
+  /* ===== RWD：桌機 > 900 > 平板 > 640 > 手機 > 360 ===== */
+  @media (max-width:900px){
+    .notes{grid-template-columns:repeat(auto-fill,minmax(180px,1fr));}
+  }
+  @media (max-width:640px){
+    .topbar{padding:14px 16px 6px;}
     .brand h1{font-size:22px;}
-    .notes{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:22px 14px;}
-    .note h3{font-size:19px;}
-    .board{border-width:6px;padding:22px 10px;}
+    .brand p{font-size:12px;}
+    .top-actions{width:100%;}
+    .top-actions .btn{flex:1;justify-content:center;}
+    .mode-tabs{max-width:none;}
+    .mode-tabs button{font-size:16px;}
+    main{padding:6px 12px 24px;}
+    .panel{padding:14px;border-radius:12px;}
+    #ingInput{font-size:16px;}
+    .filters{display:grid;grid-template-columns:1fr 1fr;gap:8px;width:100%;}
+    .filters label.inline{flex-direction:column;align-items:stretch;gap:2px;}
+    .filters label.inline:last-child{grid-column:1/-1;}
+    .filters select{width:100%;min-height:42px;font-size:16px;}
+    .actions{width:100%;margin-left:0;}
+    .actions .btn{flex:1;justify-content:center;min-height:46px;}
+    .toolbar{flex-direction:column;align-items:stretch;}
+    .view-tabs{display:flex;}
+    .view-tabs button{flex:1;min-height:42px;}
+    .stats{gap:6px;}
+    .stat{flex:1;text-align:center;padding:6px 6px;font-size:13px;}
+    .stat b{font-size:16px;}
+    .board{border-width:6px;padding:22px 10px;border-radius:16px;}
+    .notes{grid-template-columns:repeat(2,minmax(0,1fr));gap:22px 12px;}
+    .note{min-height:170px;padding:22px 12px 12px;}
+    .note h3{font-size:18px;}
+    .note .have{font-size:13px;}
+    .modal-bg{padding:20px 8px;}
     .modal{padding:30px 16px 18px;}
-    .modal h2{font-size:24px;}
+    .modal h2{font-size:24px;padding-right:24px;}
+    .modal ol{font-size:16px;}
+    .modal-actions .btn{flex:1;justify-content:center;min-height:46px;}
+    .stars button{font-size:34px;}
+    .footer-row{flex-direction:column;align-items:flex-start;}
+  }
+  @media (max-width:360px){
+    .notes{grid-template-columns:1fr;}
+    .filters{grid-template-columns:1fr;}
   }
   @media print{
     @page{size:A4;margin:16mm;}
@@ -173,7 +233,7 @@
     <div class="brand-mark">🌷</div>
     <div>
       <h1>冰箱便利貼食譜</h1>
-      <p>下班不想傷腦筋？冰箱有什麼，就幫你配出今晚的菜</p>
+      <p id="brandSub">下班不想傷腦筋？冰箱有什麼，就幫你配出今晚的菜</p>
     </div>
   </div>
   <div class="top-actions">
@@ -183,9 +243,13 @@
 </header>
 
 <main>
+  <div class="mode-tabs" role="tablist" aria-label="主題">
+    <button type="button" role="tab" data-mode="food" class="on" aria-selected="true">🍳 料理食譜</button>
+    <button type="button" role="tab" data-mode="drink" aria-selected="false">🧋 飲料製作</button>
+  </div>
   <section class="panel">
-    <h2>今天冰箱裡有什麼？</h2>
-    <p class="hint">輸入食材後按 Enter 或逗號加入。已經先放好一組預設食材，直接按「找食譜」就能試試看。</p>
+    <h2 id="inputTitle">今天冰箱裡有什麼？</h2>
+    <p class="hint" id="inputHint">輸入食材後按 Enter 或逗號加入。已經先放好一組預設食材，直接按「找食譜」就能試試看。</p>
     <div class="tag-box" id="tagBox">
       <input id="ingInput" type="text" placeholder="例如：雞蛋、番茄…" autocomplete="off" aria-label="輸入食材">
     </div>
@@ -195,23 +259,26 @@
       <button class="chip" id="resetBtn" type="button">↺ 預設值</button>
       <button class="chip" id="clearBtn" type="button">清空</button>
     </div>
-    <div class="row">
-      <label class="inline">顯示
-        <select id="limitSel"><option value="6">6</option><option value="9">9</option><option value="12" selected>12</option><option value="20">20</option></select> 張
-      </label>
-      <label class="inline">下班快手菜
-        <select id="timeSel"><option value="0" selected>不限時間</option><option value="15">15 分鐘內</option><option value="20">20 分鐘內</option><option value="30">30 分鐘內</option></select>
-      </label>
-      <label class="inline">排序
-        <select id="sortSel"><option value="match" selected>最符合食材</option><option value="rating">我的評分高</option><option value="time">料理時間短</option></select>
-      </label>
-      <span class="spacer"></span>
-      <button class="btn" id="aiBtn" type="button" title="需先在下方填入 API 金鑰">✨ AI 創意食譜</button>
-      <button class="btn primary" id="goBtn" type="button">🔍 找食譜</button>
+    <div class="row controls">
+      <div class="filters">
+        <label class="inline">顯示張數
+          <select id="limitSel"><option value="6">6 張</option><option value="9">9 張</option><option value="12" selected>12 張</option><option value="20">20 張</option></select>
+        </label>
+        <label class="inline"><span id="timeLabel">下班快手菜</span>
+          <select id="timeSel"><option value="0" selected>不限時間</option><option value="15">15 分鐘內</option><option value="20">20 分鐘內</option><option value="30">30 分鐘內</option></select>
+        </label>
+        <label class="inline">排序
+          <select id="sortSel"><option value="match" selected>最符合食材</option><option value="rating">我的評分高</option><option value="time">料理時間短</option></select>
+        </label>
+      </div>
+      <div class="actions">
+        <button class="btn" id="aiBtn" type="button" title="需先在下方填入 API 金鑰">✨ AI 創意食譜</button>
+        <button class="btn primary" id="goBtn" type="button">🔍 找食譜</button>
+      </div>
     </div>
     <details class="ai-box">
-      <summary>AI 創意食譜設定（選用，自備金鑰）</summary>
-      <p class="hint" style="margin-top:8px">不填也能用：「找食譜」使用內建 34 道家常菜比對。填入金鑰後，「AI 創意食譜」會依你的食材即時寫出新食譜；金鑰只存在這台瀏覽器。</p>
+      <summary>AI 設定（選用，自備金鑰）</summary>
+      <p class="hint" style="margin-top:8px">不填也能用：料理分頁內建 34 道家常菜、飲料分頁內建 26 款飲品配方。填入金鑰後，「AI 創意食譜／AI 特調飲品」會依你的材料即時寫出新配方；金鑰只存在這台瀏覽器。</p>
       <div class="ai-grid">
         <label>服務商
           <select id="aiProvider">
@@ -227,10 +294,16 @@
     </details>
   </section>
 
-  <div class="stats">
-    <span class="stat">找到 <b id="statFound">0</b> 道</span>
-    <span class="stat">⭐ 我的評分點數 <b id="statPoints">0</b> 點</span>
-    <span class="stat">已評分 <b id="statRated">0</b> 道</span>
+  <div class="toolbar">
+    <div class="view-tabs" role="tablist" aria-label="檢視">
+      <button type="button" role="tab" id="tabAll" class="on" aria-selected="true">📋 配對食譜</button>
+      <button type="button" role="tab" id="tabFav" aria-selected="false">❤ 我的收藏<b id="favCount">0</b></button>
+    </div>
+    <div class="stats">
+      <span class="stat"><span id="statFoundLabel">找到</span> <b id="statFound">0</b> 道</span>
+      <span class="stat">⭐ 評分點數 <b id="statPoints">0</b> 點</span>
+      <span class="stat">已評分 <b id="statRated">0</b> 道</span>
+    </div>
   </div>
 
   <section class="board" aria-label="食譜便利貼">
@@ -238,7 +311,7 @@
     <div class="ai-loading" id="aiLoading" role="status" aria-live="polite">
       <div class="ai-card">
         <span class="ai-pan">🍳</span>
-        <h3>AI 正在幫你想菜單</h3>
+        <h3 id="aiTitle">AI 正在幫你想菜單</h3>
         <div class="ai-msg" id="aiMsg">讀取你的冰箱食材…</div>
         <div class="ai-dots"><span></span><span></span><span></span></div>
         <div class="ai-bar"><i id="aiBar"></i></div>
@@ -259,6 +332,7 @@
       <span class="rate-text" id="mRateText"></span>
     </div>
     <div class="modal-actions">
+      <button class="btn fav-toggle" id="mFav" type="button">♡ 收藏</button>
       <button class="btn" id="mClose2" type="button">關閉</button>
       <button class="btn primary" id="mPdf" type="button">📄 下載 PDF</button>
     </div>
@@ -268,7 +342,7 @@
 <footer class="site-footer">
   <div class="footer-inner">
     <div class="disclaimer">
-      <strong>使用警語：</strong>食譜僅供參考，請留意食物過敏原並確實將食材煮熟；AI 產生的食譜請自行判斷是否合理。
+      <strong>使用警語：</strong>食譜與飲品配方僅供參考，請留意食物過敏原並確實將食材煮熟；飲品含咖啡因或糖分，孕婦、兒童與需控糖者請斟酌；AI 產生的內容請自行判斷是否合理。
       <details class="footer-more"><summary>完整警語與隱私說明</summary>
         <p>本工具依你輸入的食材比對內建家常食譜，或在你提供金鑰時由 AI 產生創意食譜。份量、火候與時間會因鍋具、火力與食材大小而不同，請依實際狀況調整。<strong>對特定食物過敏、孕婦、嬰幼兒、長者或有飲食限制者，請先確認食材是否適合食用</strong>；肉類、海鮮與蛋類務必充分加熱，海鮮請確認新鮮度。AI 產生的食譜可能出現不合理的搭配或步驟，請以常識判斷，不要照做明顯有疑慮的內容。</p>
         <p>食材清單、評分與 API 金鑰都只存在你的瀏覽器本機，不會上傳到本工具的伺服器；按下「AI 創意食譜」時，食材清單會直接送到你選擇的服務商官方 API（Gemini、OpenRouter、OpenAI、Claude），API 費用由你與服務商自行負擔。本工具與創作者不對依食譜烹調的結果或任何因此產生的損失負責。完整使用說明與創作者資料請見<a href="manual.html" target="_blank" rel="noopener">操作手冊</a>。</p>
@@ -299,8 +373,15 @@
     {label:"🥬 蔬食", items:["豆腐", "高麗菜", "香菇", "茄子", "九層塔"]},
     {label:"🦪 海鮮湯品", items:["蛤蜊", "絲瓜", "薑", "鮭魚", "味噌"]}
   ];
+  var DRINK_DEFAULTS = ["紅茶", "牛奶", "珍珠", "檸檬", "蜂蜜"];
+  var DRINK_PRESETS = [
+    {label:"🧋 奶茶控", items:["紅茶", "牛奶", "珍珠", "黑糖", "烏龍茶"]},
+    {label:"🍋 清爽果茶", items:["綠茶", "檸檬", "百香果", "蜂蜜", "氣泡水"]},
+    {label:"☕ 咖啡時光", items:["咖啡", "牛奶", "黑糖", "柳橙", "可可粉"]},
+    {label:"🍓 水果鮮奶", items:["牛奶", "草莓", "香蕉", "芒果", "優格"]}
+  ];
   var AI_DEFAULT_MODEL = {gemini:"gemini-3.5-flash", openrouter:"google/gemini-3.5-flash", openai:"gpt-5-mini", claude:"claude-haiku-5-5"};
-  var STORE = {ings:"fridgeRecipeNotesIngredients", ratings:"fridgeRecipeNotesRatings", api:"fridgeRecipeNotesApi", ai:"fridgeRecipeNotesAiRecipes"};
+  var STORE = {ings:"fridgeRecipeNotesIngredients", ratings:"fridgeRecipeNotesRatings", api:"fridgeRecipeNotesApi", ai:"fridgeRecipeNotesAiRecipes", favs:"fridgeRecipeNotesFavorites", drinkIngs:"fridgeRecipeNotesDrinkIngredients", mode:"fridgeRecipeNotesMode"};
 
   // 同義詞 → 標準名稱（比對前先轉換）
   var SYN = {
@@ -321,7 +402,17 @@
     "香菇":"香菇", "乾香菇":"香菇", "鮮香菇":"香菇",
     "老薑":"薑", "嫩薑":"薑", "薑絲":"薑",
     "玉米粒":"玉米", "鮭魚片":"鮭魚", "蘿蔔乾":"菜脯",
-    "黃瓜":"小黃瓜", "麵":"義大利麵", "義麵":"義大利麵"
+    "黃瓜":"小黃瓜", "麵":"義大利麵", "義麵":"義大利麵",
+    // 飲料材料
+    "紅茶葉":"紅茶", "紅茶包":"紅茶", "阿薩姆":"紅茶", "伯爵茶":"紅茶",
+    "綠茶葉":"綠茶", "綠茶包":"綠茶", "茉莉綠茶":"綠茶", "烏龍":"烏龍茶", "鐵觀音":"烏龍茶",
+    "奶":"牛奶", "鮮奶":"牛奶", "鮮乳":"牛奶", "牛乳":"牛奶", "燕麥奶":"牛奶",
+    "粉圓":"珍珠", "波霸":"珍珠", "黑糖珍珠":"珍珠",
+    "檸檬汁":"檸檬", "萊姆":"檸檬", "黑糖漿":"黑糖",
+    "咖啡粉":"咖啡", "濃縮咖啡":"咖啡", "即溶咖啡":"咖啡", "冷萃咖啡":"咖啡", "美式":"咖啡",
+    "蘇打水":"氣泡水", "汽水":"氣泡水", "氣泡礦泉水":"氣泡水",
+    "抹茶":"抹茶粉", "可可":"可可粉", "巧克力粉":"可可粉",
+    "柳丁":"柳橙", "柳橙汁":"柳橙", "柚子茶":"柚子醬", "優酪乳":"優格", "希臘優格":"優格", "冰":"冰塊"
   };
 
   // 內建食譜：main＝主要食材（計算匹配度）、extra＝可有可無的配料、season＝調味料（不計）
@@ -395,20 +486,103 @@
     {id:"r34", name:"番茄洋蔥燉雞", cat:"燉煮", time:40, level:"中等", serve:3, main:["雞腿","番茄","洋蔥"], extra:["蒜頭","紅蘿蔔"], season:["鹽","番茄醬","黑胡椒"],
      steps:["雞腿塊煎到表面金黃。","加入洋蔥、蒜頭炒香。","放番茄塊與番茄醬炒出汁。","加水半淹，小火燉 25 分鐘，調味。"], tip:"番茄的酸能讓雞肉燉得更軟嫩。"}
   ];
-  var CAT_ICON = {"家常快炒":"🍳", "下飯料理":"🍚", "涼拌小菜":"🥗", "湯品":"🍲", "蔬菜":"🥬", "主食":"🍛", "燉煮":"🥘", "海鮮":"🐟", "AI 創意":"✨"};
+
+  // 內建飲品：結構同 RECIPES，serve 單位為「杯」
+  var DRINKS = [
+    {id:"d01", name:"珍珠奶茶", cat:"奶茶", time:35, level:"中等", serve:2, main:["紅茶","牛奶","珍珠"], extra:["黑糖"], season:["糖","冰塊"],
+     steps:["珍珠依包裝煮熟（約 20 分鐘），燜 10 分鐘後泡冷開水。","紅茶包 2 個加 300ml 熱水泡 5 分鐘，取出茶包。","珍珠拌入黑糖或糖漿。","杯中放珍珠與冰塊，倒入紅茶與 150ml 牛奶拌勻。"], tip:"珍珠煮好後用糖漿泡著，口感才會 Q 又不變硬。"},
+    {id:"d02", name:"經典鮮奶茶", cat:"奶茶", time:10, level:"簡單", serve:1, main:["紅茶","牛奶"], extra:["蜂蜜"], season:["糖","冰塊"],
+     steps:["紅茶包 2 個加 150ml 熱水泡 5 分鐘，做成濃茶。","趁熱加糖攪拌溶解。","倒入 150ml 冰牛奶，加冰塊。"], tip:"茶泡濃一點，加了牛奶才不會淡掉。"},
+    {id:"d03", name:"黑糖珍珠鮮奶", cat:"鮮奶飲", time:30, level:"中等", serve:1, main:["牛奶","珍珠","黑糖"], extra:[], season:["冰塊"],
+     steps:["珍珠煮熟後瀝乾。","鍋中放黑糖與少許水煮成濃稠糖漿，放入珍珠拌炒 2 分鐘。","沿杯壁抹上黑糖漿做出虎紋。","放入珍珠與冰塊，倒入冰牛奶。"], tip:"糖漿要煮到濃稠才掛得住杯壁。"},
+    {id:"d04", name:"檸檬紅茶", cat:"果茶", time:8, level:"簡單", serve:1, main:["紅茶","檸檬"], extra:["蜂蜜"], season:["糖","冰塊"],
+     steps:["紅茶包加 250ml 熱水泡 4 分鐘。","加糖或蜂蜜拌勻放涼。","擠入半顆檸檬汁，放一片檸檬。","加冰塊搖勻。"], tip:"檸檬汁等茶稍涼再加，比較不會苦。"},
+    {id:"d05", name:"蜂蜜檸檬水", cat:"果茶", time:5, level:"簡單", serve:1, main:["檸檬","蜂蜜"], extra:["薄荷","氣泡水"], season:["冰塊"],
+     steps:["檸檬半顆擠汁，另切兩片備用。","蜂蜜 1 大匙先用少許溫水化開。","加入檸檬汁與 250ml 冷開水拌勻。","放檸檬片與冰塊。"], tip:"蜂蜜不要用滾水沖，會破壞香氣。"},
+    {id:"d06", name:"檸檬綠茶", cat:"果茶", time:8, level:"簡單", serve:1, main:["綠茶","檸檬"], extra:["蜂蜜"], season:["糖","冰塊"],
+     steps:["綠茶包用 80°C 熱水 250ml 泡 3 分鐘。","加糖拌勻放涼。","擠入檸檬汁。","加冰塊搖勻。"], tip:"綠茶水溫不要太高，才不會澀。"},
+    {id:"d07", name:"百香綠茶", cat:"果茶", time:8, level:"簡單", serve:1, main:["綠茶","百香果"], extra:["檸檬","蜂蜜"], season:["糖","冰塊"],
+     steps:["綠茶泡好放涼。","百香果 2 顆挖出果肉放入杯中。","加糖或蜂蜜拌勻。","倒入綠茶與冰塊，攪拌均勻。"], tip:"加幾滴檸檬汁，果香會更明顯。"},
+    {id:"d08", name:"鮮奶綠", cat:"奶茶", time:8, level:"簡單", serve:1, main:["綠茶","牛奶"], extra:[], season:["糖","冰塊"],
+     steps:["綠茶包 2 個加 150ml 80°C 熱水泡 4 分鐘。","加糖拌勻。","倒入 150ml 冰牛奶，加冰塊。"], tip:"茉莉綠茶做奶綠特別香。"},
+    {id:"d09", name:"冰拿鐵", cat:"咖啡", time:5, level:"簡單", serve:1, main:["咖啡","牛奶"], extra:[], season:["糖漿","冰塊"],
+     steps:["杯中放滿冰塊，倒入 200ml 冰牛奶。","萃取一份濃縮咖啡（或 2 小匙即溶咖啡加 30ml 熱水）。","咖啡慢慢沿冰塊倒入，做出分層。","依喜好加糖漿。"], tip:"牛奶先倒、咖啡後倒，就能做出漂亮的漸層。"},
+    {id:"d10", name:"黑糖拿鐵", cat:"咖啡", time:8, level:"簡單", serve:1, main:["咖啡","牛奶","黑糖"], extra:[], season:["冰塊"],
+     steps:["黑糖加少許熱水煮成糖漿。","糖漿倒入杯底。","加入冰塊與冰牛奶。","最後倒入濃縮咖啡。"], tip:"黑糖的焦香跟咖啡很搭，甜度可以自己調。"},
+    {id:"d11", name:"檸檬氣泡飲", cat:"氣泡飲", time:5, level:"簡單", serve:1, main:["氣泡水","檸檬"], extra:["薄荷","蜂蜜"], season:["糖漿","冰塊"],
+     steps:["杯中放檸檬片與薄荷葉，輕輕壓出香氣。","加入糖漿或蜂蜜。","放滿冰塊。","倒入冰涼氣泡水，輕輕攪拌。"], tip:"氣泡水最後再倒、輕輕攪，氣泡才不會跑掉。"},
+    {id:"d12", name:"百香果氣泡飲", cat:"氣泡飲", time:5, level:"簡單", serve:1, main:["氣泡水","百香果"], extra:["檸檬"], season:["糖漿","冰塊"],
+     steps:["百香果果肉與糖漿放入杯中拌勻。","加入冰塊。","慢慢倒入氣泡水。","放一片檸檬裝飾。"], tip:"用透明玻璃杯，橘黃色層次很好拍照。"},
+    {id:"d13", name:"香蕉牛奶", cat:"鮮奶飲", time:5, level:"簡單", serve:1, main:["香蕉","牛奶"], extra:["蜂蜜"], season:["冰塊"],
+     steps:["香蕉 1 根切段。","與 250ml 牛奶、少許蜂蜜放入果汁機。","打 30 秒至綿密。","倒入杯中，可加冰塊。"], tip:"用冷凍過的香蕉，不加冰也很濃稠冰涼。"},
+    {id:"d14", name:"草莓牛奶", cat:"鮮奶飲", time:10, level:"簡單", serve:1, main:["草莓","牛奶"], extra:["優格"], season:["糖"],
+     steps:["草莓 6 顆去蒂，一半切丁加糖拌勻靜置 5 分鐘。","另一半與少許牛奶打成泥。","杯中放草莓丁與草莓泥。","倒入冰牛奶，攪拌享用。"], tip:"草莓丁先用糖醃一下，會釋出漂亮的粉紅色汁液。"},
+    {id:"d15", name:"芒果優格冰沙", cat:"冰沙奶昔", time:5, level:"簡單", serve:1, main:["芒果","優格"], extra:["牛奶","蜂蜜"], season:["冰塊"],
+     steps:["芒果切塊（冷凍芒果更好）。","與 100g 優格、少許牛奶、冰塊放入果汁機。","打到綿密。","倒入杯中，放芒果丁裝飾。"], tip:"冷凍水果直接打，冰沙口感更好。"},
+    {id:"d16", name:"木瓜牛奶", cat:"鮮奶飲", time:5, level:"簡單", serve:1, main:["木瓜","牛奶"], extra:["蜂蜜"], season:["冰塊"],
+     steps:["木瓜去皮去籽切塊。","與牛奶、冰塊放入果汁機。","打勻後立刻飲用。"], tip:"打好要馬上喝，放久會變苦。"},
+    {id:"d17", name:"黑糖薑茶", cat:"暖飲", time:15, level:"簡單", serve:2, main:["薑","黑糖"], extra:["紅棗"], season:[],
+     steps:["老薑切片或拍碎。","加 500ml 水煮滾後轉小火煮 10 分鐘。","加入黑糖煮到溶化。","趁熱飲用。"], tip:"生理期或冷氣房久待時，來一杯很暖身。"},
+    {id:"d18", name:"抹茶拿鐵", cat:"鮮奶飲", time:5, level:"簡單", serve:1, main:["抹茶粉","牛奶"], extra:["蜂蜜"], season:["糖","冰塊"],
+     steps:["抹茶粉 2 小匙加 30ml 80°C 熱水。","用茶筅或小打蛋器刷到起泡無顆粒。","杯中放冰塊與牛奶。","倒入抹茶液，做出綠白分層。"], tip:"抹茶粉先過篩，就不會結塊。"},
+    {id:"d19", name:"可可牛奶", cat:"鮮奶飲", time:5, level:"簡單", serve:1, main:["可可粉","牛奶"], extra:["棉花糖"], season:["糖"],
+     steps:["可可粉 1 大匙與糖加少許熱水調成糊。","牛奶加熱到冒小泡（不要煮滾）。","倒入可可糊攪拌均勻。","放棉花糖更療癒。"], tip:"先調成糊再加牛奶，可可粉才不會浮在表面。"},
+    {id:"d20", name:"柳橙美式", cat:"咖啡", time:5, level:"簡單", serve:1, main:["咖啡","柳橙"], extra:["氣泡水"], season:["冰塊"],
+     steps:["柳橙榨汁約 120ml 倒入杯中。","放滿冰塊。","慢慢倒入黑咖啡做出分層。","放一片柳橙裝飾。"], tip:"果酸跟咖啡很搭，夏天特別清爽。"},
+    {id:"d21", name:"蜂蜜柚子茶", cat:"暖飲", time:3, level:"簡單", serve:1, main:["柚子醬"], extra:["蜂蜜","紅茶"], season:[],
+     steps:["柚子醬 2 大匙放入杯中。","沖入 250ml 熱水（或溫水）。","攪拌均勻，可加蜂蜜。"], tip:"加冰塊和氣泡水，就變成柚子氣泡飲。"},
+    {id:"d22", name:"烏龍鮮奶茶", cat:"奶茶", time:10, level:"簡單", serve:1, main:["烏龍茶","牛奶"], extra:["珍珠"], season:["糖","冰塊"],
+     steps:["烏龍茶包 2 個加 150ml 熱水泡 5 分鐘。","加糖拌勻。","倒入冰牛奶與冰塊。"], tip:"焙火烏龍做奶茶，香氣比紅茶更有層次。"},
+    {id:"d23", name:"香蕉優格奶昔", cat:"冰沙奶昔", time:5, level:"簡單", serve:1, main:["優格","香蕉"], extra:["蜂蜜","燕麥"], season:["冰塊"],
+     steps:["香蕉切段。","與優格、蜂蜜、少許冰塊放入果汁機。","打到綿密。","撒一點燕麥增加口感。"], tip:"當早餐也很適合，有飽足感。"},
+    {id:"d24", name:"鳳梨冰茶", cat:"果茶", time:10, level:"簡單", serve:1, main:["鳳梨","紅茶"], extra:["檸檬"], season:["糖","冰塊"],
+     steps:["鳳梨切小丁，一半壓成泥。","紅茶泡好加糖放涼。","杯中放鳳梨泥與鳳梨丁。","倒入紅茶與冰塊。"], tip:"鳳梨酵素多，搭紅茶很解膩。"},
+    {id:"d25", name:"冬瓜檸檬", cat:"果茶", time:5, level:"簡單", serve:1, main:["冬瓜茶","檸檬"], extra:[], season:["冰塊"],
+     steps:["冬瓜茶磚加熱水溶化（或用現成冬瓜茶）。","放涼後擠入檸檬汁。","加冰塊攪拌。"], tip:"冬瓜茶本身很甜，不用再加糖。"},
+    {id:"d26", name:"芋頭鮮奶", cat:"鮮奶飲", time:30, level:"中等", serve:2, main:["芋頭","牛奶"], extra:["珍珠"], season:["糖"],
+     steps:["芋頭去皮切塊，蒸 20 分鐘至鬆軟。","趁熱加糖壓成泥（保留一些小塊）。","杯中放芋泥與冰塊。","倒入冰牛奶攪拌。"], tip:"芋泥留點顆粒，喝起來更有口感。"}
+  ].map(function(r){ r.mode = "drink"; return r; });
+  var CAT_ICON = {"家常快炒":"🍳", "下飯料理":"🍚", "涼拌小菜":"🥗", "湯品":"🍲", "蔬菜":"🥬", "主食":"🍛", "燉煮":"🥘", "海鮮":"🐟", "AI 創意":"✨",
+    "奶茶":"🧋", "果茶":"🍋", "咖啡":"☕", "氣泡飲":"🥤", "鮮奶飲":"🥛", "冰沙奶昔":"🍹", "暖飲":"🫖", "AI 特調":"✨"};
+
+  // 兩個主題分頁的設定：文字、預設值、配方庫、AI 提示詞都從這裡取
+  var MODES = {
+    food: {recipes:RECIPES, defaults:DEFAULT_INGREDIENTS, presets:PRESETS, storeKey:STORE.ings, word:"食材", noun:"食譜", unit:"人份",
+      sub:"下班不想傷腦筋？冰箱有什麼，就幫你配出今晚的菜", title:"今天冰箱裡有什麼？",
+      hint:"輸入食材後按 Enter 或逗號加入。已經先放好一組預設食材，直接按「找食譜」就能試試看。", placeholder:"例如：雞蛋、番茄…",
+      go:"🔍 找食譜", ai:"✨ AI 創意食譜", aiCat:"AI 創意", aiTitle:"AI 正在幫你想菜單", timeLabel:"下班快手菜", times:[15, 20, 30],
+      mainLabel:"主要食材", seasonLabel:"調味料", stepsLabel:"做法", fileSuffix:"_食譜",
+      aiMsgs:["讀取你的冰箱食材…", "翻翻家常菜筆記本…", "搭配主菜與配料…", "計算料理時間與份量…", "寫下做法步驟…", "貼上便利貼…"],
+      aiIntro:"你是台灣家常菜料理老師。使用者冰箱有這些食材：", aiAsk:"請設計 4 道適合在家做、以這些食材為主的創意料理（可另外假設家中有鹽、糖、醬油、油等基本調味料）"},
+    drink: {recipes:DRINKS, defaults:DRINK_DEFAULTS, presets:DRINK_PRESETS, storeKey:STORE.drinkIngs, word:"材料", noun:"飲品", unit:"杯",
+      sub:"下午茶時間到！手邊有什麼，就調出一杯療癒飲品", title:"今天想喝點什麼？",
+      hint:"輸入手邊的茶葉、牛奶、水果等材料，按 Enter 或逗號加入。已經先放好一組預設材料，直接按「找飲品」就能試試看。", placeholder:"例如：紅茶、牛奶、檸檬…",
+      go:"🔍 找飲品", ai:"✨ AI 特調飲品", aiCat:"AI 特調", aiTitle:"AI 正在幫你調飲料", timeLabel:"快速完成", times:[5, 10, 15],
+      mainLabel:"主要材料", seasonLabel:"甜度與冰塊", stepsLabel:"製作步驟", fileSuffix:"_飲品配方",
+      aiMsgs:["看看你手邊的材料…", "調整茶與奶的比例…", "搭配水果與配料…", "計算甜度與冰塊…", "寫下製作步驟…", "貼上便利貼…"],
+      aiIntro:"你是台灣手搖飲與咖啡店的飲品研發師。使用者手邊有這些材料：", aiAsk:"請設計 4 款在家就能做、以這些材料為主的創意飲品（可另外假設家中有糖、冰塊、熱水）"}
+  };
 
   /* ================= 狀態 ================= */
   function load(key, fallback){ try { var v = JSON.parse(localStorage.getItem(key)); return v == null ? fallback : v; } catch(e){ return fallback; } }
   function save(key, val){ try { localStorage.setItem(key, JSON.stringify(val)); } catch(e){} }
 
   var state = {
-    ings: load(STORE.ings, DEFAULT_INGREDIENTS.slice()),
+    mode: load(STORE.mode, "food") === "drink" ? "drink" : "food",
+    ings: [],
     ratings: load(STORE.ratings, {}),
     aiRecipes: load(STORE.ai, []),
+    favs: load(STORE.favs, []),
+    view: "all",
     results: [],
     current: null
   };
-  if(!Array.isArray(state.ings)) state.ings = DEFAULT_INGREDIENTS.slice();
+  function M(){ return MODES[state.mode]; }
+  function modeOf(r){ return r.mode || "food"; }
+  function loadIngs(){ var v = load(M().storeKey, null); state.ings = Array.isArray(v) ? v : M().defaults.slice(); }
+  function saveIngs(){ save(M().storeKey, state.ings); }
+  loadIngs();
+  if(!Array.isArray(state.favs)) state.favs = [];
 
   var $ = function(id){ return document.getElementById(id); };
   function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
@@ -424,7 +598,7 @@
       if(state.ings.some(function(x){ return canon(x) === canon(n); })) return;
       state.ings.push(n); added++;
     });
-    if(added){ save(STORE.ings, state.ings); renderTags(); }
+    if(added){ saveIngs(); renderTags(); }
   }
   function renderTags(){
     var box = $("tagBox"), input = $("ingInput");
@@ -433,7 +607,7 @@
       var span = document.createElement("span");
       span.className = "tag";
       span.innerHTML = esc(n) + '<button type="button" aria-label="移除 ' + esc(n) + '">×</button>';
-      span.querySelector("button").onclick = function(){ state.ings.splice(i, 1); save(STORE.ings, state.ings); renderTags(); };
+      span.querySelector("button").onclick = function(){ state.ings.splice(i, 1); saveIngs(); renderTags(); };
       box.insertBefore(span, input);
     });
   }
@@ -444,20 +618,23 @@
       if(this.value.trim()){ addIngredients(this.value); this.value = ""; }
       else if(e.key === "Enter") generate();
     } else if(e.key === "Backspace" && !this.value && state.ings.length){
-      state.ings.pop(); save(STORE.ings, state.ings); renderTags();
+      state.ings.pop(); saveIngs(); renderTags();
     }
   });
   $("ingInput").addEventListener("blur", function(){ if(this.value.trim()){ addIngredients(this.value); this.value = ""; } });
   $("tagBox").addEventListener("click", function(e){ if(e.target === this) $("ingInput").focus(); });
 
-  PRESETS.forEach(function(p){
-    var b = document.createElement("button");
-    b.type = "button"; b.className = "chip"; b.textContent = p.label;
-    b.onclick = function(){ state.ings = p.items.slice(); save(STORE.ings, state.ings); renderTags(); generate(); };
-    $("presetChips").appendChild(b);
-  });
-  $("resetBtn").onclick = function(){ state.ings = DEFAULT_INGREDIENTS.slice(); save(STORE.ings, state.ings); renderTags(); generate(); };
-  $("clearBtn").onclick = function(){ state.ings = []; save(STORE.ings, state.ings); renderTags(); $("ingInput").focus(); };
+  function renderPresets(){
+    $("presetChips").innerHTML = "";
+    M().presets.forEach(function(p){
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "chip"; b.textContent = p.label;
+      b.onclick = function(){ state.ings = p.items.slice(); saveIngs(); renderTags(); setView("all"); };
+      $("presetChips").appendChild(b);
+    });
+  }
+  $("resetBtn").onclick = function(){ state.ings = M().defaults.slice(); saveIngs(); renderTags(); generate(); };
+  $("clearBtn").onclick = function(){ state.ings = []; saveIngs(); renderTags(); $("ingInput").focus(); };
 
   /* ================= 比對 ================= */
   function haveIt(recipeIng, userCanon){
@@ -480,17 +657,55 @@
   }
   function generate(){
     var userCanon = state.ings.map(canon);
-    if(!userCanon.length){ state.results = []; renderNotes(); toast("請先輸入至少一樣食材"); return; }
-    var pool = RECIPES.concat(state.aiRecipes);
     var maxTime = +$("timeSel").value;
+    if(state.view === "fav"){
+      // 收藏：不管食材是否符合都列出（仍套用時間篩選與排序，不限張數）
+      var favList = state.favs.map(findRecipe).filter(function(r){ return r && modeOf(r) === state.mode; }).map(function(r){ return scoreRecipe(r, userCanon); })
+        .filter(function(s){ return !maxTime || s.recipe.time <= maxTime; });
+      state.results = sortResults(favList);
+      renderNotes();
+      return;
+    }
+    if(!userCanon.length){ state.results = []; renderNotes(); toast("請先輸入至少一樣" + M().word); return; }
+    var pool = M().recipes.concat(state.aiRecipes.filter(function(r){ return modeOf(r) === state.mode; }));
     var list = pool.map(function(r){ return scoreRecipe(r, userCanon); }).filter(function(s){ return s.hit.length > 0 && (!maxTime || s.recipe.time <= maxTime); });
     state.results = sortResults(list).slice(0, +$("limitSel").value);
     renderNotes();
   }
-  $("goBtn").onclick = generate;
+  $("goBtn").onclick = function(){ setView("all"); };
   $("timeSel").onchange = generate;
   $("limitSel").onchange = generate;
   $("sortSel").onchange = generate;
+
+  /* ================= 收藏 ================= */
+  function isFav(id){ return state.favs.indexOf(id) >= 0; }
+  function toggleFav(id){
+    if(isFav(id)){ state.favs = state.favs.filter(function(x){ return x !== id; }); toast("已從收藏移除"); }
+    else { state.favs.unshift(id); toast("已加入我的收藏 ❤"); }
+    save(STORE.favs, state.favs);
+    renderFavCount();
+    if(state.current && state.current.id === id) renderFavBtn(true);
+    if(state.view === "fav") generate(); else renderNotes();
+  }
+  function setView(v){
+    state.view = v;
+    $("tabAll").classList.toggle("on", v === "all"); $("tabAll").setAttribute("aria-selected", v === "all");
+    $("tabFav").classList.toggle("on", v === "fav"); $("tabFav").setAttribute("aria-selected", v === "fav");
+    $("statFoundLabel").textContent = v === "fav" ? "收藏" : "找到";
+    generate();
+  }
+  function renderFavCount(){
+    $("favCount").textContent = state.favs.map(findRecipe).filter(function(r){ return r && modeOf(r) === state.mode; }).length;
+  }
+  $("tabAll").onclick = function(){ setView("all"); };
+  $("tabFav").onclick = function(){ setView("fav"); };
+  function renderFavBtn(pop){
+    var b = $("mFav"), on = state.current && isFav(state.current.id);
+    b.classList.toggle("on", !!on);
+    b.textContent = on ? "❤ 已收藏" : "♡ 收藏";
+    if(pop){ b.classList.remove("pop"); void b.offsetWidth; b.classList.add("pop"); }
+  }
+  $("mFav").onclick = function(){ if(state.current) toggleFav(state.current.id); };
 
   /* ================= 便利貼 ================= */
   function starsText(n){ var s = ""; for(var i = 1; i <= 5; i++) s += i <= n ? "★" : '<span class="off">★</span>'; return s; }
@@ -502,22 +717,32 @@
     $("statFound").textContent = state.results.length;
     renderStats();
     if(!state.results.length){
-      wrap.innerHTML = '<div class="empty" style="grid-column:1/-1">' + (state.ings.length ? "找不到用得上這些食材的食譜，換幾樣食材試試，或用「✨ AI 創意食譜」。" : "先在上面輸入食材吧！") + "</div>";
+      var msg = state.view === "fav"
+        ? (+$("favCount").textContent ? "沒有符合目前時間篩選的收藏，把「" + M().timeLabel + "」改成不限時間看看。" : "還沒有收藏任何" + M().noun + "。<br>點便利貼右上角的 ♡，喜歡的" + M().noun + "就會收進這裡。")
+        : (state.ings.length ? "找不到用得上這些" + M().word + "的" + M().noun + "，換幾樣" + M().word + "試試，或用「" + M().ai + "」。" : "先在上面輸入" + M().word + "吧！");
+      wrap.innerHTML = '<div class="empty" style="grid-column:1/-1">' + msg + "</div>";
       return;
     }
     state.results.forEach(function(s){
-      var r = s.recipe, rot = ((hashNum(r.id + "rot") % 7) - 3) * 0.8;
-      var b = document.createElement("button");
-      b.type = "button";
+      var r = s.recipe, rot = ((hashNum(r.id + "rot") % 7) - 3) * 0.8, fav = isFav(r.id);
+      // 便利貼內有收藏按鈕，不能用 <button> 包 <button>，改用 div＋role
+      var b = document.createElement("div");
+      b.setAttribute("role", "button");
+      b.tabIndex = 0;
       b.className = "note " + noteColor(r);
       b.style.setProperty("--rot", rot + "deg");
+      var have = (s.hit.length ? "✔ " + esc(s.hit.join("、")) : "") +
+        (s.missing.length ? (s.hit.length ? "<br>" : "") + '<span class="miss">✘ 還缺 ' + esc(s.missing.join("、")) + "</span>" : "");
       b.innerHTML =
+        '<button type="button" class="fav' + (fav ? " on" : "") + '" aria-pressed="' + fav + '" aria-label="' + (fav ? "取消收藏 " : "收藏 ") + esc(r.name) + '">' + (fav ? "❤" : "♡") + "</button>" +
         '<span class="cat">' + (CAT_ICON[r.cat] || "🍽") + " " + esc(r.cat) + (r.ai ? ' <span class="ai-badge">AI</span>' : "") + "</span>" +
-        "<h3>" + esc(r.name) + "</h3>" +
-        '<span class="meta">⏱ ' + esc(r.time) + " 分鐘・" + esc(r.level) + "・" + esc(r.serve) + " 人份</span>" +
-        '<span class="have">✔ ' + esc(s.hit.join("、")) + (s.missing.length ? '<br><span class="miss">✘ 還缺 ' + esc(s.missing.join("、")) + "</span>" : "") + "</span>" +
+        '<h3 style="padding-right:30px">' + esc(r.name) + "</h3>" +
+        '<span class="meta">⏱ ' + esc(r.time) + " 分鐘・" + esc(r.level) + "・" + esc(r.serve) + " " + MODES[modeOf(r)].unit + "</span>" +
+        '<span class="have">' + have + "</span>" +
         '<span class="bottom"><span>符合 ' + Math.round(s.ratio * 100) + '%</span><span class="mini-stars">' + starsText(ratingOf(r)) + "</span></span>";
+      b.querySelector(".fav").onclick = function(e){ e.stopPropagation(); toggleFav(r.id); };
       b.onclick = function(){ openDetail(r.id); };
+      b.onkeydown = function(e){ if(e.target === b && (e.key === "Enter" || e.key === " ")){ e.preventDefault(); openDetail(r.id); } };
       wrap.appendChild(b);
     });
   }
@@ -529,7 +754,7 @@
 
   /* ================= 詳情 ================= */
   function findRecipe(id){
-    return RECIPES.concat(state.aiRecipes).filter(function(r){ return r.id === id; })[0];
+    return RECIPES.concat(DRINKS, state.aiRecipes).filter(function(r){ return r.id === id; })[0];
   }
   function openDetail(id){
     var r = findRecipe(id);
@@ -538,17 +763,19 @@
     var userCanon = state.ings.map(canon);
     var ingHtml = r.main.map(function(m){ return haveIt(m, userCanon) ? '<span class="ok">✔ ' + esc(m) + "</span>" : '<span class="miss">✘ ' + esc(m) + "</span>"; }).join("");
     var extraHtml = (r.extra || []).map(function(m){ return haveIt(m, userCanon) ? '<span class="ok">✔ ' + esc(m) + "</span>" : "<span>" + esc(m) + "</span>"; }).join("");
+    var MR = MODES[modeOf(r)];
     $("modal").className = "modal " + noteColor(r);
     $("mBody").innerHTML =
       '<div class="cat">' + (CAT_ICON[r.cat] || "🍽") + " " + esc(r.cat) + (r.ai ? "（AI 產生）" : "") + "</div>" +
       '<h2 id="mTitle">' + esc(r.name) + "</h2>" +
-      '<div class="meta">⏱ ' + esc(r.time) + " 分鐘｜難度：" + esc(r.level) + "｜" + esc(r.serve) + " 人份</div>" +
-      "<h4>主要食材</h4><div class=\"ing-list\">" + ingHtml + "</div>" +
+      '<div class="meta">⏱ ' + esc(r.time) + " 分鐘｜難度：" + esc(r.level) + "｜" + esc(r.serve) + " " + MR.unit + "</div>" +
+      "<h4>" + MR.mainLabel + "</h4><div class=\"ing-list\">" + ingHtml + "</div>" +
       (extraHtml ? "<h4>配料（可有可無）</h4><div class=\"ing-list\">" + extraHtml + "</div>" : "") +
-      ((r.season || []).length ? "<h4>調味料</h4><div class=\"ing-list\">" + r.season.map(function(x){ return "<span>" + esc(x) + "</span>"; }).join("") + "</div>" : "") +
-      "<h4>做法</h4><ol>" + r.steps.map(function(x){ return "<li>" + esc(x) + "</li>"; }).join("") + "</ol>" +
+      ((r.season || []).length ? "<h4>" + MR.seasonLabel + "</h4><div class=\"ing-list\">" + r.season.map(function(x){ return "<span>" + esc(x) + "</span>"; }).join("") + "</div>" : "") +
+      "<h4>" + MR.stepsLabel + "</h4><ol>" + r.steps.map(function(x){ return "<li>" + esc(x) + "</li>"; }).join("") + "</ol>" +
       (r.tip ? '<div class="tip">💡 ' + esc(r.tip) + "</div>" : "");
     renderStars();
+    renderFavBtn();
     $("modalBg").classList.add("show");
     $("mClose").focus();
   }
@@ -593,13 +820,14 @@
   function buildPrintHtml(r){
     var userCanon = state.ings.map(canon);
     var line = function(arr, mark){ return arr.map(function(m){ return mark && haveIt(m, userCanon) ? esc(m) + "（已有）" : esc(m); }).join("、"); };
+    var MR = MODES[modeOf(r)];
     var stars = ratingOf(r) ? "｜我的評分：" + "★★★★★".slice(0, ratingOf(r)) + "☆☆☆☆☆".slice(ratingOf(r)) : "";
     return "<h1>" + esc(r.name) + "</h1>" +
-      '<div class="p-meta">' + esc(r.cat) + "｜" + esc(r.time) + " 分鐘｜難度：" + esc(r.level) + "｜" + esc(r.serve) + " 人份" + stars + "</div>" +
-      '<h3>主要食材</h3><div class="p-ing">' + line(r.main, true) + "</div>" +
+      '<div class="p-meta">' + esc(r.cat) + "｜" + esc(r.time) + " 分鐘｜難度：" + esc(r.level) + "｜" + esc(r.serve) + " " + MR.unit + stars + "</div>" +
+      "<h3>" + MR.mainLabel + '</h3><div class="p-ing">' + line(r.main, true) + "</div>" +
       ((r.extra || []).length ? '<h3>配料（可有可無）</h3><div class="p-ing">' + line(r.extra, true) + "</div>" : "") +
-      ((r.season || []).length ? '<h3>調味料</h3><div class="p-ing">' + line(r.season) + "</div>" : "") +
-      "<h3>做法</h3><ol>" + r.steps.map(function(x){ return "<li>" + esc(x) + "</li>"; }).join("") + "</ol>" +
+      ((r.season || []).length ? "<h3>" + MR.seasonLabel + '</h3><div class="p-ing">' + line(r.season) + "</div>" : "") +
+      "<h3>" + MR.stepsLabel + "</h3><ol>" + r.steps.map(function(x){ return "<li>" + esc(x) + "</li>"; }).join("") + "</ol>" +
       (r.tip ? '<div class="p-tip">小提示：' + esc(r.tip) + "</div>" : "") +
       '<div class="p-foot">由「冰箱便利貼食譜」產生｜製作：Mark Tsai（蔡豐全） tsaimark@gmail.com｜食譜僅供參考，請留意過敏原並確實煮熟。</div>';
   }
@@ -607,7 +835,7 @@
     var r = state.current; if(!r) return;
     $("printArea").innerHTML = buildPrintHtml(r);
     var oldTitle = document.title;
-    document.title = r.name + "_食譜";
+    document.title = r.name + MODES[modeOf(r)].fileSuffix;
     var restore = function(){ document.title = oldTitle; window.removeEventListener("afterprint", restore); };
     window.addEventListener("afterprint", restore);
     toast("請在列印視窗選擇「另存為 PDF」");
@@ -665,17 +893,17 @@
     return JSON.parse(s.slice(a, b + 1));
   }
   function buildAiPrompt(){
-    return "你是台灣家常菜料理老師。使用者冰箱有這些食材：" + state.ings.join("、") + "。\n" +
-      "請設計 4 道適合在家做、以這些食材為主的創意料理（可另外假設家中有鹽、糖、醬油、油等基本調味料），使用繁體中文與台灣用語。\n" +
+    return M().aiIntro + state.ings.join("、") + "。\n" +
+      M().aiAsk + "，使用繁體中文與台灣用語。\n" +
       "只回傳 JSON 陣列，不要任何說明文字，每個元素格式：\n" +
-      '{"name":"菜名","time":分鐘數字,"level":"簡單|中等|進階","serve":人份數字,"main":["主要食材"],"extra":["可有可無的配料"],"season":["調味料"],"steps":["步驟1","步驟2"],"tip":"一句小提示"}\n' +
+      '{"name":"名稱","time":分鐘數字,"level":"簡單|中等|進階","serve":' + M().unit + '數字,"main":["主要食材"],"extra":["可有可無的配料"],"season":["調味料"],"steps":["步驟1","步驟2"],"tip":"一句小提示"}\n' +
       "main 請優先使用使用者提供的食材名稱，steps 3～6 步。";
   }
   /* AI 執行狀態卡：輪播訊息＋假進度條（最多到 92%，完成才補滿）＋秒數＋取消 */
-  var AI_MSGS = ["讀取你的冰箱食材…", "翻翻家常菜筆記本…", "搭配主菜與配料…", "計算料理時間與份量…", "寫下做法步驟…", "貼上便利貼…"];
   var aiRun = null;
   function startAiLoading(){
-    var t0 = Date.now(), i = 0;
+    var t0 = Date.now(), i = 0, AI_MSGS = M().aiMsgs;
+    $("aiTitle").textContent = M().aiTitle;
     $("aiMsg").textContent = AI_MSGS[0];
     $("aiBar").style.width = "4%";
     $("aiTime").textContent = "已等待 0 秒";
@@ -702,8 +930,9 @@
     persistApi();
     var key = api.keys[api.provider];
     if(!key){ document.querySelector("details.ai-box").open = true; $("aiKey").focus(); toast("請先填入 API 金鑰"); return; }
-    if(!state.ings.length){ toast("請先輸入至少一樣食材"); return; }
+    if(!state.ings.length){ toast("請先輸入至少一樣" + M().word); return; }
     if(aiRun) return;
+    if(state.view !== "all") setView("all");
     var btn = $("aiBtn"); btn.disabled = true; btn.textContent = "✨ AI 撰寫中…";
     $("goBtn").disabled = true;
     aiRun = startAiLoading();
@@ -713,35 +942,70 @@
       var arr = parseJsonArray(raw).filter(function(x){ return x && x.name && Array.isArray(x.main) && Array.isArray(x.steps); });
       if(!arr.length) throw new Error("AI 沒有回傳可用的食譜");
       var fresh = arr.map(function(x){
-        return {id:"ai-" + hashNum(x.name), ai:true, name:String(x.name), cat:"AI 創意", time:+x.time || 20, level:x.level || "簡單", serve:+x.serve || 2,
+        return {id:(state.mode === "drink" ? "aid-" : "ai-") + hashNum(x.name), ai:true, mode:state.mode, name:String(x.name), cat:M().aiCat, time:+x.time || 20, level:x.level || "簡單", serve:+x.serve || 2,
           main:x.main.map(String), extra:(x.extra || []).map(String), season:(x.season || []).map(String), steps:x.steps.map(String), tip:x.tip ? String(x.tip) : ""};
       });
       var ids = fresh.map(function(r){ return r.id; });
-      state.aiRecipes = fresh.concat(state.aiRecipes.filter(function(r){ return ids.indexOf(r.id) < 0; })).slice(0, 40);
+      // 最多留 40 筆非收藏的 AI 食譜；已收藏的永遠保留
+      var nonFavKept = 0;
+      state.aiRecipes = fresh.concat(state.aiRecipes.filter(function(r){ return ids.indexOf(r.id) < 0; }))
+        .filter(function(r){ return isFav(r.id) || ++nonFavKept <= 40; });
       save(STORE.ai, state.aiRecipes);
       var userCanon = state.ings.map(canon);
       var aiScored = fresh.map(function(r){ var s = scoreRecipe(r, userCanon); if(!s.hit.length) s.ratio = 0; return s; });
-      var rest = sortResults(RECIPES.map(function(r){ return scoreRecipe(r, userCanon); }).filter(function(s){ return s.hit.length > 0; }));
+      var rest = sortResults(M().recipes.map(function(r){ return scoreRecipe(r, userCanon); }).filter(function(s){ return s.hit.length > 0; }));
       state.results = aiScored.concat(rest).slice(0, Math.max(+$("limitSel").value, aiScored.length));
       ok = true;
       renderNotes();
-      toast("AI 新增了 " + fresh.length + " 張創意食譜便利貼");
+      toast("AI 新增了 " + fresh.length + " 張" + M().aiCat + "便利貼");
     } catch(e){
-      if(e.name === "AbortError") toast("已取消 AI 創意食譜");
-      else { toast("AI 失敗：" + e.message + "，已改用內建食譜"); generate(); }
+      if(e.name === "AbortError") toast("已取消 " + M().ai.replace("✨ ", ""));
+      else { toast("AI 失敗：" + e.message + "，已改用內建" + M().noun); generate(); }
     } finally {
       stopAiLoading(ok);
-      btn.disabled = false; btn.textContent = "✨ AI 創意食譜";
+      btn.disabled = false; btn.textContent = M().ai;
       $("goBtn").disabled = false;
     }
   }
   $("aiBtn").onclick = generateAi;
 
   /* ================= 啟動 ================= */
-  renderTags();
+  /* ================= 主題分頁：料理／飲料 ================= */
+  function renderModeUI(){
+    var m = M();
+    document.body.classList.toggle("mode-drink", state.mode === "drink");
+    Array.prototype.forEach.call(document.querySelectorAll(".mode-tabs button"), function(b){
+      var on = b.getAttribute("data-mode") === state.mode;
+      b.classList.toggle("on", on); b.setAttribute("aria-selected", on);
+    });
+    $("brandSub").textContent = m.sub;
+    $("inputTitle").textContent = m.title;
+    $("inputHint").textContent = m.hint;
+    $("ingInput").placeholder = m.placeholder;
+    $("goBtn").textContent = m.go;
+    if(!aiRun) $("aiBtn").textContent = m.ai;
+    $("timeLabel").textContent = m.timeLabel;
+    $("timeSel").innerHTML = '<option value="0">不限時間</option>' + m.times.map(function(t){ return '<option value="' + t + '">' + t + " 分鐘內</option>"; }).join("");
+    renderPresets();
+    renderTags();
+    renderFavCount();
+  }
+  function setMode(mode){
+    if(aiRun || mode === state.mode || !MODES[mode]) return;
+    state.mode = mode;
+    save(STORE.mode, mode);
+    loadIngs();
+    renderModeUI();
+    generate();
+  }
+  Array.prototype.forEach.call(document.querySelectorAll(".mode-tabs button"), function(b){
+    b.onclick = function(){ setMode(b.getAttribute("data-mode")); };
+  });
+
+  renderModeUI();
   generate();
 
-  window._recipe = {state:state, RECIPES:RECIPES, generate:generate, openDetail:openDetail, rate:rate, buildPrintHtml:buildPrintHtml, downloadPdf:downloadPdf};
+  window._recipe = {state:state, RECIPES:RECIPES, DRINKS:DRINKS, setMode:setMode, generate:generate, openDetail:openDetail, rate:rate, toggleFav:toggleFav, setView:setView, buildPrintHtml:buildPrintHtml, downloadPdf:downloadPdf};
 })();
 </script>
 
