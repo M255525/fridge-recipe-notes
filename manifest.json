@@ -1,0 +1,16 @@
+{
+  "name": "冰箱便利貼食譜",
+  "short_name": "便利貼食譜",
+  "description": "輸入手邊食材，自動配出家常食譜，以便利貼呈現，可下載 PDF 並用五星評分",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#fbf3ef",
+  "theme_color": "#e0849b",
+  "lang": "zh-TW",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

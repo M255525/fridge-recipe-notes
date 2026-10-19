@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>冰箱便利貼食譜</title>
+<meta name="description" content="輸入手邊幾樣食材，自動配出家常食譜，以便利貼呈現，可下載 PDF 並用五星評分。">
+<meta name="theme-color" content="#e0849b">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=LXGW+WenKai+TC:wght@400;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#fbf3ef; --board:#f6e3de;
+    --panel:#fffdfb; --ink:#4a3b3f; --dim:#8e7a7f; --line:#f0dcd8; --line-soft:#f6e8e4;
+    --accent:#e0849b; --accent-dark:#c25f7a; --ok:#3f8f68; --miss:#c9566b; --star:#f5a623;
+    --shadow:0 6px 16px rgba(160,90,105,.16);
+    --note-font:"LXGW WenKai TC","Noto Sans TC",sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;}
+  body{font-family:"Noto Sans TC",system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.6;}
+  a{color:var(--accent-dark);}
+  button{font:inherit;cursor:pointer;}
+
+  #marqueeBar{position:fixed;top:0;left:0;right:0;height:30px;background:var(--panel);border-bottom:1px solid var(--line-soft);z-index:2100;overflow:hidden;display:none;align-items:center;}
+  #marqueeBar.show{display:flex;}
+  #marqueeTrack{white-space:nowrap;display:inline-block;padding-left:100%;animation:marquee-scroll linear infinite;font-size:13px;color:var(--dim);}
+  #marqueeBar:hover #marqueeTrack{animation-play-state:paused}
+  @keyframes marquee-scroll{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+  body.has-marquee{padding-top:30px;}
+
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;max-width:1180px;margin:0 auto;padding:18px 16px 8px;}
+  .brand{display:flex;align-items:center;gap:12px;}
+  .brand-mark{width:44px;height:44px;border-radius:12px;background:#ffd6de;box-shadow:var(--shadow);display:grid;place-items:center;font-size:24px;transform:rotate(-4deg);}
+  .brand h1{margin:0;font-family:var(--note-font);font-size:26px;letter-spacing:1px;}
+  .brand p{margin:0;font-size:13px;color:var(--dim);}
+  .top-actions{display:flex;gap:8px;flex-wrap:wrap;}
+  .btn{border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:8px 14px;border-radius:999px;font-size:14px;text-decoration:none;display:inline-flex;align-items:center;gap:6px;}
+  .btn:hover{border-color:var(--accent);}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:700;}
+  .btn.primary:hover{background:var(--accent-dark);}
+  .btn:disabled{opacity:.55;cursor:not-allowed;}
+
+  main{max-width:1180px;margin:0 auto;padding:8px 16px 32px;}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;box-shadow:0 2px 0 var(--line-soft);}
+  .panel h2{margin:0 0 4px;font-size:18px;}
+  .hint{font-size:13px;color:var(--dim);margin:0 0 12px;}
+
+  .tag-box{display:flex;flex-wrap:wrap;gap:8px;align-items:center;border:1.5px dashed var(--line);border-radius:12px;padding:10px;background:#fff;min-height:56px;}
+  .tag-box:focus-within{border-color:var(--accent);}
+  .tag{display:inline-flex;align-items:center;gap:4px;background:#ffe7ec;border:1px solid #f4bfcb;border-radius:6px;padding:4px 6px 4px 10px;font-size:15px;}
+  .tag button{border:0;background:transparent;color:var(--dim);font-size:16px;line-height:1;padding:0 4px;}
+  .tag button:hover{color:var(--miss);}
+  #ingInput{flex:1;min-width:150px;border:0;outline:0;font:inherit;font-size:15px;padding:6px;background:transparent;}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px;}
+  .chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:5px 12px;font-size:13px;}
+  .chip:hover{border-color:var(--accent);color:var(--accent-dark);}
+  .row .spacer{flex:1;}
+  label.inline{font-size:13px;color:var(--dim);display:inline-flex;align-items:center;gap:6px;}
+  select,input[type=text],input[type=password]{font:inherit;font-size:14px;border:1px solid var(--line);border-radius:8px;padding:6px 8px;background:#fff;color:var(--ink);}
+
+  details.ai-box{margin-top:12px;border-top:1px dashed var(--line);padding-top:10px;}
+  details.ai-box summary{cursor:pointer;font-size:14px;color:var(--dim);}
+  .ai-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-top:10px;}
+  .ai-grid label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--dim);}
+
+  .stats{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0 10px;align-items:center;}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:6px 12px;font-size:14px;}
+  .stat b{color:var(--accent-dark);font-size:18px;margin:0 2px;}
+
+  .board{background:var(--board) radial-gradient(rgba(194,95,122,.13) 1px,transparent 1.6px) 0 0/16px 16px;border:10px solid #fff;border-radius:22px;padding:28px 18px;min-height:260px;box-shadow:0 8px 24px rgba(160,90,105,.14);}
+  .notes{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:26px 20px;}
+  .note{position:relative;border:0;border-radius:3px 3px 14px 3px;text-align:left;font-family:var(--note-font);color:#4a3b3f;padding:24px 16px 14px;min-height:190px;box-shadow:var(--shadow);transform:rotate(var(--rot,0deg));transition:transform .18s ease,box-shadow .18s ease;display:flex;flex-direction:column;gap:6px;}
+  .note::before{content:"";position:absolute;top:-10px;left:50%;width:74px;height:20px;transform:translateX(-50%) rotate(-3deg);background:repeating-linear-gradient(45deg,rgba(224,132,155,.45) 0 6px,rgba(255,255,255,.6) 6px 12px);box-shadow:0 1px 2px rgba(0,0,0,.08);}
+  .note:nth-child(3n+2)::before{background:repeating-linear-gradient(90deg,rgba(143,190,160,.5) 0 5px,rgba(255,255,255,.6) 5px 10px);}
+  .note:nth-child(3n)::before{background:radial-gradient(rgba(255,255,255,.85) 2px,transparent 2.5px) 0 0/8px 8px,rgba(240,190,120,.5);}
+  .note:hover,.note:focus-visible{transform:rotate(0deg) translateY(-6px) scale(1.03);box-shadow:0 14px 26px rgba(160,90,105,.26);z-index:2;outline:none;}
+  .note .cat{font-size:13px;opacity:.75;}
+  .note h3{margin:0;font-size:22px;line-height:1.3;}
+  .note .meta{font-family:"Noto Sans TC",sans-serif;font-size:12px;opacity:.8;}
+  .note .have{font-size:14px;}
+  .note .have .miss{color:var(--miss);}
+  .note .bottom{margin-top:auto;display:flex;justify-content:space-between;align-items:center;font-family:"Noto Sans TC",sans-serif;font-size:12px;}
+  .note .mini-stars{color:var(--star);letter-spacing:1px;font-size:15px;}
+  .note .mini-stars .off{color:rgba(0,0,0,.18);}
+  .note .ai-badge{background:rgba(0,0,0,.08);border-radius:4px;padding:0 5px;}
+  .c0{background:#fff4b8;} .c1{background:#ffd6de;} .c2{background:#d7f0e3;} .c3{background:#dbe8fb;} .c4{background:#ffe2cc;} .c5{background:#ead9f7;}
+  .empty{color:var(--dim);text-align:center;font-size:16px;padding:50px 10px;}
+
+  .modal-bg{position:fixed;inset:0;background:rgba(74,59,63,.45);display:none;align-items:flex-start;justify-content:center;padding:40px 16px;z-index:3000;overflow:auto;}
+  .modal-bg.show{display:flex;}
+  .modal{position:relative;width:min(640px,100%);font-family:var(--note-font);padding:34px 26px 22px;border-radius:4px 4px 22px 4px;box-shadow:0 20px 40px rgba(74,59,63,.3);}
+  .modal::before{content:"";position:absolute;top:-12px;left:50%;width:120px;height:24px;transform:translateX(-50%) rotate(2deg);background:repeating-linear-gradient(45deg,rgba(224,132,155,.5) 0 7px,rgba(255,255,255,.7) 7px 14px);}
+  .modal .x{position:absolute;top:10px;right:12px;border:0;background:transparent;font-size:24px;color:rgba(0,0,0,.5);}
+  .modal h2{margin:0;font-size:30px;}
+  .modal .meta{font-family:"Noto Sans TC",sans-serif;font-size:13px;opacity:.8;margin:4px 0 12px;}
+  .modal h4{margin:14px 0 6px;font-size:18px;border-bottom:1.5px dashed rgba(0,0,0,.2);padding-bottom:2px;}
+  .ing-list{display:flex;flex-wrap:wrap;gap:6px;font-size:15px;}
+  .ing-list span{background:rgba(255,255,255,.55);border-radius:4px;padding:1px 8px;}
+  .ing-list .ok{color:var(--ok);font-weight:700;}
+  .ing-list .miss{color:var(--miss);}
+  .modal ol{margin:0;padding-left:22px;font-size:17px;}
+  .modal ol li{margin:4px 0;}
+  .tip{background:rgba(255,255,255,.55);border-radius:6px;padding:8px 10px;font-size:15px;margin-top:12px;}
+  .rate-box{margin-top:16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-family:"Noto Sans TC",sans-serif;}
+  .stars{display:inline-flex;gap:2px;}
+  .stars button{border:0;background:transparent;font-size:30px;line-height:1;padding:0 2px;color:rgba(0,0,0,.2);transition:transform .1s;}
+  .stars button.on{color:var(--star);}
+  .stars button:hover{transform:scale(1.15);}
+  .rate-text{font-size:13px;color:#5a4a38;}
+  .modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;flex-wrap:wrap;font-family:"Noto Sans TC",sans-serif;}
+
+  .site-footer{border-top:1px solid var(--line);background:var(--panel);margin-top:20px;}
+  .footer-inner{max-width:1180px;margin:0 auto;padding:16px;font-size:13px;color:var(--dim);}
+  .footer-row{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;align-items:center;margin-top:8px;}
+  .footer-more summary{cursor:pointer;margin-top:4px;}
+  .footer-license{margin:8px 0 0;}
+  #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:#c25f7a;color:#fff;padding:10px 16px;border-radius:999px;font-size:14px;opacity:0;pointer-events:none;transition:all .25s;z-index:4000;max-width:90vw;}
+  #toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+  #printArea{display:none;}
+  @media (max-width:560px){
+    .brand h1{font-size:22px;}
+    .notes{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:22px 14px;}
+    .note h3{font-size:19px;}
+    .board{border-width:6px;padding:22px 10px;}
+    .modal{padding:30px 16px 18px;}
+    .modal h2{font-size:24px;}
+  }
+  @media print{
+    @page{size:A4;margin:16mm;}
+    body{background:#fff;padding:0 !important;}
+    body > *:not(#printArea){display:none !important;}
+    #printArea{display:block;color:#000;font-family:"Noto Sans TC",sans-serif;}
+    #printArea h1{font-family:var(--note-font);font-size:30px;margin:0 0 4px;color:#c25f7a;border-left:8px solid #ffd6de;padding-left:10px;}
+    #printArea .p-meta{font-size:12px;color:#555;margin-bottom:10px;}
+    #printArea h3{font-size:16px;margin:14px 0 6px;border-bottom:1.5px dashed #e0849b;color:#4a3b3f;}
+    #printArea ol{padding-left:22px;font-size:14px;}
+    #printArea li{margin:3px 0;break-inside:avoid;}
+    #printArea .p-ing{font-size:14px;}
+    #printArea .p-tip{background:#fff1f4;border-radius:6px;padding:8px 10px;font-size:13px;margin-top:12px;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+    #printArea .p-foot{margin-top:24px;border-top:1px solid #ccc;padding-top:6px;font-size:11px;color:#666;}
+  }
+</style>
+</head>
+<body>
+<div id="marqueeBar"><div id="marqueeTrack"></div></div>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-mark">🌷</div>
+    <div>
+      <h1>冰箱便利貼食譜</h1>
+      <p>下班不想傷腦筋？冰箱有什麼，就幫你配出今晚的菜</p>
+    </div>
+  </div>
+  <div class="top-actions">
+    <a class="btn" href="manual.html" target="_blank" rel="noopener">📖 操作手冊</a>
+    <button class="btn" id="installBtn" type="button">📲 加入主畫面</button>
+  </div>
+</header>
+
+<main>
+  <section class="panel">
+    <h2>今天冰箱裡有什麼？</h2>
+    <p class="hint">輸入食材後按 Enter 或逗號加入。已經先放好一組預設食材，直接按「找食譜」就能試試看。</p>
+    <div class="tag-box" id="tagBox">
+      <input id="ingInput" type="text" placeholder="例如：雞蛋、番茄…" autocomplete="off" aria-label="輸入食材">
+    </div>
+    <div class="row">
+      <span class="hint" style="margin:0">快速範例：</span>
+      <span id="presetChips"></span>
+      <button class="chip" id="resetBtn" type="button">↺ 預設值</button>
+      <button class="chip" id="clearBtn" type="button">清空</button>
+    </div>
+    <div class="row">
+      <label class="inline">顯示
+        <select id="limitSel"><option value="6">6</option><option value="9">9</option><option value="12" selected>12</option><option value="20">20</option></select> 張
+      </label>
+      <label class="inline">下班快手菜
+        <select id="timeSel"><option value="0" selected>不限時間</option><option value="15">15 分鐘內</option><option value="20">20 分鐘內</option><option value="30">30 分鐘內</option></select>
+      </label>
+      <label class="inline">排序
+        <select id="sortSel"><option value="match" selected>最符合食材</option><option value="rating">我的評分高</option><option value="time">料理時間短</option></select>
+      </label>
+      <span class="spacer"></span>
+      <button class="btn" id="aiBtn" type="button" title="需先在下方填入 API 金鑰">✨ AI 創意食譜</button>
+      <button class="btn primary" id="goBtn" type="button">🔍 找食譜</button>
+    </div>
+    <details class="ai-box">
+      <summary>AI 創意食譜設定（選用，自備金鑰）</summary>
+      <p class="hint" style="margin-top:8px">不填也能用：「找食譜」使用內建 34 道家常菜比對。填入金鑰後，「AI 創意食譜」會依你的食材即時寫出新食譜；金鑰只存在這台瀏覽器。</p>
+      <div class="ai-grid">
+        <label>服務商
+          <select id="aiProvider">
+            <option value="gemini">Google Gemini</option>
+            <option value="openrouter">OpenRouter</option>
+            <option value="openai">OpenAI</option>
+            <option value="claude">Anthropic Claude</option>
+          </select>
+        </label>
+        <label>模型 <input id="aiModel" type="text"></label>
+        <label>API 金鑰 <input id="aiKey" type="password" placeholder="貼上你的金鑰" autocomplete="off"></label>
+      </div>
+    </details>
+  </section>
+
+  <div class="stats">
+    <span class="stat">找到 <b id="statFound">0</b> 道</span>
+    <span class="stat">⭐ 我的評分點數 <b id="statPoints">0</b> 點</span>
+    <span class="stat">已評分 <b id="statRated">0</b> 道</span>
+  </div>
+
+  <section class="board" aria-label="食譜便利貼">
+    <div class="notes" id="notes"></div>
+  </section>
+</main>
+
+<div class="modal-bg" id="modalBg" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+  <div class="modal" id="modal">
+    <button class="x" id="mClose" type="button" aria-label="關閉">×</button>
+    <div id="mBody"></div>
+    <div class="rate-box">
+      <span>給這道菜打分數：</span>
+      <span class="stars" id="mStars"></span>
+      <span class="rate-text" id="mRateText"></span>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" id="mClose2" type="button">關閉</button>
+      <button class="btn primary" id="mPdf" type="button">📄 下載 PDF</button>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="disclaimer">
+      <strong>使用警語：</strong>食譜僅供參考，請留意食物過敏原並確實將食材煮熟；AI 產生的食譜請自行判斷是否合理。
+      <details class="footer-more"><summary>完整警語與隱私說明</summary>
+        <p>本工具依你輸入的食材比對內建家常食譜，或在你提供金鑰時由 AI 產生創意食譜。份量、火候與時間會因鍋具、火力與食材大小而不同，請依實際狀況調整。<strong>對特定食物過敏、孕婦、嬰幼兒、長者或有飲食限制者，請先確認食材是否適合食用</strong>；肉類、海鮮與蛋類務必充分加熱，海鮮請確認新鮮度。AI 產生的食譜可能出現不合理的搭配或步驟，請以常識判斷，不要照做明顯有疑慮的內容。</p>
+        <p>食材清單、評分與 API 金鑰都只存在你的瀏覽器本機，不會上傳到本工具的伺服器；按下「AI 創意食譜」時，食材清單會直接送到你選擇的服務商官方 API（Gemini、OpenRouter、OpenAI、Claude），API 費用由你與服務商自行負擔。本工具與創作者不對依食譜烹調的結果或任何因此產生的損失負責。完整使用說明與創作者資料請見<a href="manual.html" target="_blank" rel="noopener">操作手冊</a>。</p>
+      </details>
+    </div>
+    <div class="footer-row">
+      <span>製作：Mark Tsai（蔡豐全）｜<a href="mailto:tsaimark@gmail.com">tsaimark@gmail.com</a>｜<a href="manual.html#creator" target="_blank" rel="noopener">創作者資料</a>｜<a href="manual.html" target="_blank" rel="noopener">操作手冊</a></span>
+      <span class="footer-links">
+        <img class="visitor-badge" src="https://visitor-badge.laobi.icu/badge?page_id=m255525.fridgerecipenotes" alt="訪客次數" height="20">
+      </span>
+    </div>
+    <p class="footer-license">本工具僅供教學、課程及個人使用，禁止未經授權公開發布、販售或商業化使用。</p>
+  </div>
+</footer>
+
+<div id="toast"></div>
+<div id="printArea"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ================= 預設值 ================= */
+  var DEFAULT_INGREDIENTS = ["雞蛋", "番茄", "洋蔥", "豆腐", "青蔥"];
+  var PRESETS = [
+    {label:"🏠 家常", items:["雞蛋", "番茄", "洋蔥", "豆腐", "青蔥"]},
+    {label:"🥩 肉食", items:["豬肉", "牛肉", "洋蔥", "馬鈴薯", "紅蘿蔔"]},
+    {label:"🥬 蔬食", items:["豆腐", "高麗菜", "香菇", "茄子", "九層塔"]},
+    {label:"🦪 海鮮湯品", items:["蛤蜊", "絲瓜", "薑", "鮭魚", "味噌"]}
+  ];
+  var AI_DEFAULT_MODEL = {gemini:"gemini-3.5-flash", openrouter:"google/gemini-3.5-flash", openai:"gpt-5-mini", claude:"claude-haiku-5-5"};
+  var STORE = {ings:"fridgeRecipeNotesIngredients", ratings:"fridgeRecipeNotesRatings", api:"fridgeRecipeNotesApi", ai:"fridgeRecipeNotesAiRecipes"};
+
+  // 同義詞 → 標準名稱（比對前先轉換）
+  var SYN = {
+    "蛋":"雞蛋", "雞蛋":"雞蛋", "土雞蛋":"雞蛋", "洗選蛋":"雞蛋",
+    "蕃茄":"番茄", "西紅柿":"番茄", "牛番茄":"番茄", "小番茄":"番茄",
+    "蔥":"青蔥", "蔥花":"青蔥", "青蔥":"青蔥",
+    "板豆腐":"豆腐", "嫩豆腐":"豆腐", "雞蛋豆腐":"豆腐",
+    "絞肉":"豬絞肉", "肉末":"豬絞肉", "豬絞肉":"豬絞肉",
+    "豬肉片":"豬肉", "豬肉絲":"豬肉", "五花肉":"豬肉", "梅花肉":"豬肉", "里肌肉":"豬肉",
+    "牛肉片":"牛肉", "牛肉絲":"牛肉", "牛腩":"牛肉",
+    "雞肉":"雞腿", "雞腿肉":"雞腿", "雞胸肉":"雞腿", "雞胸":"雞腿",
+    "蒜":"蒜頭", "大蒜":"蒜頭", "蒜末":"蒜頭",
+    "甘藍":"高麗菜", "包心菜":"高麗菜",
+    "飯":"白飯", "隔夜飯":"白飯", "米飯":"白飯",
+    "土豆":"馬鈴薯", "洋芋":"馬鈴薯",
+    "胡蘿蔔":"紅蘿蔔", "蘿蔔":"紅蘿蔔",
+    "甜椒":"青椒", "彩椒":"青椒",
+    "香菇":"香菇", "乾香菇":"香菇", "鮮香菇":"香菇",
+    "老薑":"薑", "嫩薑":"薑", "薑絲":"薑",
+    "玉米粒":"玉米", "鮭魚片":"鮭魚", "蘿蔔乾":"菜脯",
+    "黃瓜":"小黃瓜", "麵":"義大利麵", "義麵":"義大利麵"
+  };
+
+  // 內建食譜：main＝主要食材（計算匹配度）、extra＝可有可無的配料、season＝調味料（不計）
+  var RECIPES = [
+    {id:"r01", name:"番茄炒蛋", cat:"家常快炒", time:10, level:"簡單", serve:2, main:["番茄","雞蛋"], extra:["青蔥"], season:["鹽","糖","番茄醬"],
+     steps:["番茄切塊，雞蛋加少許鹽打散。","熱油下蛋液，炒至半熟盛起。","原鍋下番茄炒軟出汁，加 1 小匙糖、1 大匙番茄醬。","倒回雞蛋拌炒均勻，撒蔥花起鍋。"], tip:"番茄先炒到出汁再放蛋，湯汁才會濃郁下飯。"},
+    {id:"r02", name:"蔥花煎蛋", cat:"家常快炒", time:8, level:"簡單", serve:2, main:["雞蛋","青蔥"], extra:[], season:["鹽","白胡椒"],
+     steps:["青蔥切蔥花，與雞蛋、少許鹽打勻。","鍋中多放一點油燒熱，倒入蛋液。","中小火煎到底部金黃，翻面再煎 1 分鐘。","切塊盛盤。"], tip:"油要夠熱才倒蛋液，邊緣會酥脆蓬鬆。"},
+    {id:"r03", name:"洋蔥炒蛋", cat:"家常快炒", time:10, level:"簡單", serve:2, main:["洋蔥","雞蛋"], extra:["青蔥"], season:["鹽","醬油"],
+     steps:["洋蔥切絲，雞蛋打散。","先炒蛋至凝固盛起。","原鍋炒洋蔥到透明微焦。","倒回蛋，淋少許醬油拌勻。"], tip:"洋蔥炒到微焦糖化會帶甜味，不用再加糖。"},
+    {id:"r04", name:"麻婆豆腐", cat:"下飯料理", time:20, level:"中等", serve:3, main:["豆腐","豬絞肉"], extra:["青蔥","蒜頭"], season:["辣豆瓣醬","醬油","太白粉","花椒粉"],
+     steps:["豆腐切小方塊，放入加鹽的熱水燙 2 分鐘撈起。","熱油爆香蒜末，下絞肉炒散至變色。","加 1 大匙辣豆瓣醬炒出紅油，加半碗水與醬油。","放入豆腐小火煮 3 分鐘，以太白粉水勾芡。","撒蔥花與花椒粉起鍋。"], tip:"豆腐先汆燙可去豆味，也比較不容易破。"},
+    {id:"r05", name:"紅燒豆腐", cat:"下飯料理", time:20, level:"簡單", serve:3, main:["豆腐","青蔥"], extra:["紅蘿蔔","香菇"], season:["醬油","糖","蠔油"],
+     steps:["豆腐切厚片，兩面煎至金黃。","爆香蔥白與香菇片。","加醬油 2 大匙、蠔油 1 大匙、糖 1 小匙與半碗水。","放入豆腐燜煮 5 分鐘收汁，撒蔥綠。"], tip:"煎豆腐時別急著翻面，表面定型才不會黏鍋。"},
+    {id:"r06", name:"皮蛋豆腐", cat:"涼拌小菜", time:5, level:"簡單", serve:2, main:["豆腐","皮蛋"], extra:["青蔥"], season:["醬油膏","香油","柴魚片"],
+     steps:["嫩豆腐瀝乾水分，擺盤。","皮蛋剝殼切小塊鋪上。","淋醬油膏與香油，撒蔥花、柴魚片。"], tip:"皮蛋先冰過或用熱水泡一下再切，比較不會黏刀。"},
+    {id:"r07", name:"番茄豆腐湯", cat:"湯品", time:15, level:"簡單", serve:3, main:["番茄","豆腐"], extra:["青蔥","雞蛋"], season:["鹽","白胡椒"],
+     steps:["番茄切塊炒軟出汁。","加 4 碗水煮滾。","放入豆腐塊煮 5 分鐘。","鹽、白胡椒調味，撒蔥花。"], tip:"想要湯色更紅，可以加一小匙番茄醬。"},
+    {id:"r08", name:"番茄蛋花湯", cat:"湯品", time:12, level:"簡單", serve:3, main:["番茄","雞蛋"], extra:["青蔥"], season:["鹽","香油"],
+     steps:["番茄切塊炒軟。","加水煮滾後轉小火。","蛋液繞圈慢慢倒入，靜置 10 秒再攪開。","調味後滴香油、撒蔥花。"], tip:"倒蛋液時湯要保持微滾，蛋花才會漂亮成片。"},
+    {id:"r09", name:"洋蔥炒牛肉", cat:"下飯料理", time:15, level:"中等", serve:2, main:["洋蔥","牛肉"], extra:["青椒"], season:["醬油","米酒","黑胡椒","太白粉"],
+     steps:["牛肉片用醬油、米酒、太白粉抓醃 10 分鐘。","大火快炒牛肉至七分熟盛起。","原鍋炒洋蔥絲到軟。","倒回牛肉，撒黑胡椒快速拌炒起鍋。"], tip:"牛肉別炒太久，七分熟先起鍋才會嫩。"},
+    {id:"r10", name:"三杯雞", cat:"下飯料理", time:30, level:"中等", serve:3, main:["雞腿","九層塔"], extra:["蒜頭","薑"], season:["麻油","醬油","米酒","冰糖"],
+     steps:["雞腿切塊，冷鍋麻油小火煸薑片到捲曲。","加蒜頭爆香，下雞肉煎到表面金黃。","加醬油、米酒各半杯與冰糖 1 大匙。","蓋鍋燜煮 15 分鐘收汁。","起鍋前放入九層塔拌勻。"], tip:"麻油不耐高溫，全程中小火才不會發苦。"},
+    {id:"r11", name:"蔥爆牛肉", cat:"下飯料理", time:15, level:"中等", serve:2, main:["牛肉","青蔥"], extra:["蒜頭"], season:["醬油","蠔油","米酒","太白粉"],
+     steps:["牛肉片抓醃醬油、米酒、太白粉。","青蔥切段，分蔥白與蔥綠。","大火炒牛肉至變色盛起。","爆香蔥白，倒回牛肉加蠔油，最後下蔥綠快炒。"], tip:"蔥綠最後才下，保持翠綠與香氣。"},
+    {id:"r12", name:"蒜炒高麗菜", cat:"蔬菜", time:8, level:"簡單", serve:3, main:["高麗菜"], extra:["蒜頭","紅蘿蔔"], season:["鹽"],
+     steps:["高麗菜用手撕成片洗淨。","爆香蒜片。","大火下高麗菜快炒，沿鍋邊淋少許水。","炒軟後加鹽調味。"], tip:"手撕的高麗菜切面不規則，比較容易入味。"},
+    {id:"r13", name:"高麗菜飯", cat:"主食", time:35, level:"中等", serve:4, main:["高麗菜","白飯","豬肉"], extra:["香菇","紅蘿蔔"], season:["醬油","白胡椒","油蔥酥"],
+     steps:["豬肉切絲、香菇泡軟切絲。","爆香香菇與肉絲，加醬油炒香。","加入高麗菜炒軟。","拌入白飯翻炒均勻，加油蔥酥與白胡椒調味。"], tip:"用隔夜飯炒比較粒粒分明，不會糊成一團。"},
+    {id:"r14", name:"蛋炒飯", cat:"主食", time:10, level:"簡單", serve:2, main:["白飯","雞蛋"], extra:["青蔥","火腿","玉米"], season:["鹽","醬油","白胡椒"],
+     steps:["雞蛋打散，青蔥切蔥花。","熱油下蛋液，半熟時倒入白飯。","大火拌炒到飯粒鬆散。","沿鍋邊淋醬油，加鹽、胡椒調味，撒蔥花。"], tip:"蛋液半熟時下飯，蛋會均勻裹在飯粒上。"},
+    {id:"r15", name:"玉米蛋餅", cat:"主食", time:10, level:"簡單", serve:2, main:["雞蛋","玉米"], extra:["青蔥","起司"], season:["鹽","醬油膏"],
+     steps:["雞蛋加玉米粒、蔥花與少許鹽打勻。","平底鍋放蛋餅皮煎到微黃翻面。","倒入蛋液，再把餅皮蓋上去。","煎熟後捲起切段，沾醬油膏。"], tip:"沒有蛋餅皮也可以加 2 大匙麵粉和水，調成粉漿自己煎。"},
+    {id:"r16", name:"馬鈴薯燉肉", cat:"燉煮", time:45, level:"中等", serve:4, main:["馬鈴薯","豬肉","紅蘿蔔"], extra:["洋蔥"], season:["醬油","味醂","米酒","糖"],
+     steps:["馬鈴薯、紅蘿蔔切滾刀塊，洋蔥切瓣。","炒豬肉片至變色，加入洋蔥炒軟。","放入根莖類，加水淹過食材。","加醬油、味醂、米酒與糖，小火燉 25 分鐘。"], tip:"燉好後放涼再加熱，會更入味。"},
+    {id:"r17", name:"家常咖哩飯", cat:"主食", time:40, level:"簡單", serve:4, main:["馬鈴薯","紅蘿蔔","洋蔥"], extra:["雞腿","豬肉"], season:["咖哩塊"],
+     steps:["食材切塊，肉類先煎到表面金黃。","加入洋蔥炒軟，再下馬鈴薯、紅蘿蔔。","加水淹過食材，煮滾後小火燉 20 分鐘。","關火放入咖哩塊攪拌融化，再小火煮 5 分鐘。"], tip:"關火後再放咖哩塊，比較不會結塊。"},
+    {id:"r18", name:"魚香茄子", cat:"下飯料理", time:20, level:"中等", serve:3, main:["茄子","豬絞肉"], extra:["蒜頭","青蔥","九層塔"], season:["辣豆瓣醬","醬油","醋","糖"],
+     steps:["茄子切段，先過油或熱油煎軟盛起。","爆香蒜末，炒散絞肉。","加辣豆瓣醬、醬油、少許糖與醋。","放回茄子拌炒收汁，撒蔥花或九層塔。"], tip:"茄子切好後泡鹽水，可以減少氧化變黑。"},
+    {id:"r19", name:"九層塔烘蛋", cat:"家常快炒", time:10, level:"簡單", serve:2, main:["九層塔","雞蛋"], extra:["番茄"], season:["鹽","魚露"],
+     steps:["九層塔切碎，與雞蛋、少許鹽打勻。","鍋中放較多油燒熱。","倒入蛋液，用筷子稍微畫圈。","兩面煎到蓬鬆金黃。"], tip:"油量多一點、火大一點，烘蛋才會膨起來。"},
+    {id:"r20", name:"菜脯蛋", cat:"家常快炒", time:10, level:"簡單", serve:2, main:["菜脯","雞蛋"], extra:["青蔥"], season:["糖"],
+     steps:["菜脯泡水 5 分鐘去鹹，擠乾切碎。","乾鍋炒菜脯到香，加一點糖。","加入蛋液與蔥花混勻。","兩面煎至金黃。"], tip:"菜脯本身很鹹，蛋液不用再加鹽。"},
+    {id:"r21", name:"日式蒸蛋", cat:"家常快炒", time:15, level:"簡單", serve:2, main:["雞蛋"], extra:["青蔥","香菇","蛤蜊"], season:["鹽","醬油"],
+     steps:["雞蛋與溫水以 1：1.5 比例打勻，加少許鹽。","用濾網過篩，撈掉泡泡。","蓋上盤子或保鮮膜，中小火蒸 12 分鐘。","淋少許醬油、撒蔥花。"], tip:"電鍋蒸時鍋蓋留一根筷子的縫隙，表面會更光滑。"},
+    {id:"r22", name:"味噌豆腐湯", cat:"湯品", time:10, level:"簡單", serve:3, main:["豆腐","味噌"], extra:["青蔥","海帶芽","蛤蜊"], season:["柴魚粉"],
+     steps:["水煮滾，加柴魚粉。","放入豆腐丁與海帶芽煮 2 分鐘。","轉小火，味噌用湯勺化開後拌入。","撒蔥花，不要再大滾。"], tip:"味噌滾太久香氣會流失，最後加、加完就關火。"},
+    {id:"r23", name:"青椒肉絲", cat:"下飯料理", time:15, level:"簡單", serve:2, main:["青椒","豬肉"], extra:["蒜頭","紅蘿蔔"], season:["醬油","米酒","太白粉"],
+     steps:["豬肉切絲抓醃醬油、米酒、太白粉。","青椒切絲。","大火炒肉絲至變色盛起。","炒青椒到翠綠，倒回肉絲拌勻調味。"], tip:"青椒不要炒太久，保持脆度。"},
+    {id:"r24", name:"蒜炒地瓜葉", cat:"蔬菜", time:6, level:"簡單", serve:2, main:["地瓜葉"], extra:["蒜頭"], season:["鹽","醬油膏"],
+     steps:["地瓜葉摘嫩葉洗淨。","爆香蒜末。","大火快炒地瓜葉至軟。","加鹽，或起鍋淋醬油膏。"], tip:"也可以燙熟後淋蒜末醬油膏，更清爽。"},
+    {id:"r25", name:"絲瓜蛤蜊", cat:"蔬菜", time:15, level:"簡單", serve:3, main:["絲瓜","蛤蜊"], extra:["薑","枸杞"], season:["鹽","米酒"],
+     steps:["蛤蜊泡鹽水吐沙，絲瓜去皮切塊。","爆香薑絲，下絲瓜炒到稍軟。","加少許水燜煮 3 分鐘。","放入蛤蜊，蓋鍋煮到殼全開。"], tip:"蛤蜊本身有鹹味，最後試過味道再決定要不要加鹽。"},
+    {id:"r26", name:"薑絲蛤蜊湯", cat:"湯品", time:10, level:"簡單", serve:3, main:["蛤蜊","薑"], extra:["青蔥","九層塔"], season:["鹽","米酒"],
+     steps:["蛤蜊吐沙洗淨。","水煮滾，放入薑絲。","加入蛤蜊煮到開口，馬上關火。","加少許米酒、鹽調味。"], tip:"蛤蜊一開口就關火，肉才不會縮得太小。"},
+    {id:"r27", name:"香煎鮭魚", cat:"海鮮", time:15, level:"簡單", serve:2, main:["鮭魚"], extra:["檸檬","洋蔥"], season:["鹽","黑胡椒"],
+     steps:["鮭魚擦乾，兩面抹鹽、黑胡椒。","鍋子不放油，皮朝下中小火煎。","逼出油脂後翻面，每面約 4 分鐘。","擠檸檬汁享用。"], tip:"鮭魚本身油脂多，冷鍋下鍋慢煎，魚皮會很酥。"},
+    {id:"r28", name:"蒜泥白肉", cat:"涼拌小菜", time:30, level:"中等", serve:3, main:["豬肉"], extra:["蒜頭","小黃瓜","青蔥"], season:["醬油膏","糖","香油"],
+     steps:["整塊五花肉加蔥薑冷水下鍋，煮 20 分鐘。","關火燜 10 分鐘後撈起放涼切薄片。","蒜泥加醬油膏、少許糖與香油調成醬汁。","肉片鋪在小黃瓜絲上，淋醬汁。"], tip:"肉放涼再切，才切得出薄片。"},
+    {id:"r29", name:"涼拌小黃瓜", cat:"涼拌小菜", time:15, level:"簡單", serve:3, main:["小黃瓜"], extra:["蒜頭","辣椒"], season:["鹽","醋","糖","香油"],
+     steps:["小黃瓜拍裂切段，加鹽抓勻靜置 10 分鐘。","倒掉釋出的水分。","加蒜末、醋、糖、香油拌勻。","冷藏 30 分鐘更入味。"], tip:"先用鹽殺青去水，口感會更脆。"},
+    {id:"r30", name:"香菇雞湯", cat:"湯品", time:50, level:"簡單", serve:4, main:["雞腿","香菇"], extra:["薑","紅棗"], season:["鹽","米酒"],
+     steps:["雞腿塊汆燙去血水。","香菇泡軟，泡香菇的水留著。","所有材料連香菇水放入鍋中加水。","小火燉 40 分鐘，加鹽、米酒調味。"], tip:"用電鍋燉也行，外鍋放 2 杯水。"},
+    {id:"r31", name:"番茄義大利麵", cat:"主食", time:25, level:"簡單", serve:2, main:["番茄","義大利麵"], extra:["洋蔥","蒜頭","九層塔"], season:["鹽","橄欖油","番茄醬"],
+     steps:["義大利麵依包裝時間在鹽水中煮，留一杯煮麵水。","橄欖油炒蒜末與洋蔥丁。","加番茄塊炒到糊狀，可加番茄醬增色。","放入麵條與少許煮麵水拌勻，撒九層塔。"], tip:"煮麵水含澱粉，能讓醬汁更容易附著在麵上。"},
+    {id:"r32", name:"玉米濃湯", cat:"湯品", time:25, level:"簡單", serve:4, main:["玉米","馬鈴薯"], extra:["洋蔥","牛奶","紅蘿蔔"], season:["鹽","奶油","黑胡椒"],
+     steps:["奶油炒洋蔥丁到透明。","加入馬鈴薯丁、紅蘿蔔丁與水，煮到軟爛。","放入玉米粒，壓碎部分馬鈴薯讓湯變稠。","倒入牛奶加熱，調味。"], tip:"用馬鈴薯自然勾芡，不用太白粉也能很濃稠。"},
+    {id:"r33", name:"豆腐滑蛋", cat:"家常快炒", time:12, level:"簡單", serve:2, main:["豆腐","雞蛋"], extra:["青蔥","蝦仁"], season:["鹽","太白粉"],
+     steps:["嫩豆腐切小塊。","蛋液加少許鹽與 1 小匙太白粉水打勻。","豆腐先在鍋中煎熱。","倒入蛋液，用鍋鏟慢慢推到半凝固就起鍋，撒蔥花。"], tip:"蛋液加太白粉水，口感會更滑嫩。"},
+    {id:"r34", name:"番茄洋蔥燉雞", cat:"燉煮", time:40, level:"中等", serve:3, main:["雞腿","番茄","洋蔥"], extra:["蒜頭","紅蘿蔔"], season:["鹽","番茄醬","黑胡椒"],
+     steps:["雞腿塊煎到表面金黃。","加入洋蔥、蒜頭炒香。","放番茄塊與番茄醬炒出汁。","加水半淹，小火燉 25 分鐘，調味。"], tip:"番茄的酸能讓雞肉燉得更軟嫩。"}
+  ];
+  var CAT_ICON = {"家常快炒":"🍳", "下飯料理":"🍚", "涼拌小菜":"🥗", "湯品":"🍲", "蔬菜":"🥬", "主食":"🍛", "燉煮":"🥘", "海鮮":"🐟", "AI 創意":"✨"};
+
+  /* ================= 狀態 ================= */
+  function load(key, fallback){ try { var v = JSON.parse(localStorage.getItem(key)); return v == null ? fallback : v; } catch(e){ return fallback; } }
+  function save(key, val){ try { localStorage.setItem(key, JSON.stringify(val)); } catch(e){} }
+
+  var state = {
+    ings: load(STORE.ings, DEFAULT_INGREDIENTS.slice()),
+    ratings: load(STORE.ratings, {}),
+    aiRecipes: load(STORE.ai, []),
+    results: [],
+    current: null
+  };
+  if(!Array.isArray(state.ings)) state.ings = DEFAULT_INGREDIENTS.slice();
+
+  var $ = function(id){ return document.getElementById(id); };
+  function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+  function toast(msg){ var t = $("toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toast._t); toast._t = setTimeout(function(){ t.classList.remove("show"); }, 2400); }
+
+  /* ================= 食材標籤 ================= */
+  function canon(name){ var n = String(name).trim(); return SYN[n] || n; }
+  function addIngredients(text){
+    var added = 0;
+    String(text).split(/[,，、;；\s]+/).forEach(function(raw){
+      var n = raw.trim();
+      if(!n) return;
+      if(state.ings.some(function(x){ return canon(x) === canon(n); })) return;
+      state.ings.push(n); added++;
+    });
+    if(added){ save(STORE.ings, state.ings); renderTags(); }
+  }
+  function renderTags(){
+    var box = $("tagBox"), input = $("ingInput");
+    Array.prototype.slice.call(box.querySelectorAll(".tag")).forEach(function(t){ t.remove(); });
+    state.ings.forEach(function(n, i){
+      var span = document.createElement("span");
+      span.className = "tag";
+      span.innerHTML = esc(n) + '<button type="button" aria-label="移除 ' + esc(n) + '">×</button>';
+      span.querySelector("button").onclick = function(){ state.ings.splice(i, 1); save(STORE.ings, state.ings); renderTags(); };
+      box.insertBefore(span, input);
+    });
+  }
+  $("ingInput").addEventListener("keydown", function(e){
+    if(e.isComposing) return;
+    if(e.key === "Enter" || e.key === "," || e.key === "，"){
+      e.preventDefault();
+      if(this.value.trim()){ addIngredients(this.value); this.value = ""; }
+      else if(e.key === "Enter") generate();
+    } else if(e.key === "Backspace" && !this.value && state.ings.length){
+      state.ings.pop(); save(STORE.ings, state.ings); renderTags();
+    }
+  });
+  $("ingInput").addEventListener("blur", function(){ if(this.value.trim()){ addIngredients(this.value); this.value = ""; } });
+  $("tagBox").addEventListener("click", function(e){ if(e.target === this) $("ingInput").focus(); });
+
+  PRESETS.forEach(function(p){
+    var b = document.createElement("button");
+    b.type = "button"; b.className = "chip"; b.textContent = p.label;
+    b.onclick = function(){ state.ings = p.items.slice(); save(STORE.ings, state.ings); renderTags(); generate(); };
+    $("presetChips").appendChild(b);
+  });
+  $("resetBtn").onclick = function(){ state.ings = DEFAULT_INGREDIENTS.slice(); save(STORE.ings, state.ings); renderTags(); generate(); };
+  $("clearBtn").onclick = function(){ state.ings = []; save(STORE.ings, state.ings); renderTags(); $("ingInput").focus(); };
+
+  /* ================= 比對 ================= */
+  function haveIt(recipeIng, userCanon){
+    return userCanon.some(function(u){ return u === recipeIng || (u.length >= 2 && (recipeIng.indexOf(u) >= 0 || u.indexOf(recipeIng) >= 0)); });
+  }
+  function scoreRecipe(r, userCanon){
+    var hit = r.main.filter(function(m){ return haveIt(m, userCanon); });
+    var extraHit = (r.extra || []).filter(function(m){ return haveIt(m, userCanon); });
+    return {recipe:r, hit:hit, missing:r.main.filter(function(m){ return hit.indexOf(m) < 0; }), extraHit:extraHit, ratio:r.main.length ? hit.length / r.main.length : 0};
+  }
+  function ratingOf(r){ return state.ratings[r.id] || 0; }
+  function sortResults(list){
+    var mode = $("sortSel").value;
+    list.sort(function(a, b){
+      if(mode === "rating" && ratingOf(b.recipe) !== ratingOf(a.recipe)) return ratingOf(b.recipe) - ratingOf(a.recipe);
+      if(mode === "time" && a.recipe.time !== b.recipe.time) return a.recipe.time - b.recipe.time;
+      return (b.hit.length + b.extraHit.length * 0.3 + b.ratio) - (a.hit.length + a.extraHit.length * 0.3 + a.ratio) || a.recipe.time - b.recipe.time;
+    });
+    return list;
+  }
+  function generate(){
+    var userCanon = state.ings.map(canon);
+    if(!userCanon.length){ state.results = []; renderNotes(); toast("請先輸入至少一樣食材"); return; }
+    var pool = RECIPES.concat(state.aiRecipes);
+    var maxTime = +$("timeSel").value;
+    var list = pool.map(function(r){ return scoreRecipe(r, userCanon); }).filter(function(s){ return s.hit.length > 0 && (!maxTime || s.recipe.time <= maxTime); });
+    state.results = sortResults(list).slice(0, +$("limitSel").value);
+    renderNotes();
+  }
+  $("goBtn").onclick = generate;
+  $("timeSel").onchange = generate;
+  $("limitSel").onchange = generate;
+  $("sortSel").onchange = generate;
+
+  /* ================= 便利貼 ================= */
+  function starsText(n){ var s = ""; for(var i = 1; i <= 5; i++) s += i <= n ? "★" : '<span class="off">★</span>'; return s; }
+  function hashNum(str){ var h = 0; for(var i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) | 0; return Math.abs(h); }
+  function noteColor(r){ return "c" + (hashNum(r.id) % 6); }
+  function renderNotes(){
+    var wrap = $("notes");
+    wrap.innerHTML = "";
+    $("statFound").textContent = state.results.length;
+    renderStats();
+    if(!state.results.length){
+      wrap.innerHTML = '<div class="empty" style="grid-column:1/-1">' + (state.ings.length ? "找不到用得上這些食材的食譜，換幾樣食材試試，或用「✨ AI 創意食譜」。" : "先在上面輸入食材吧！") + "</div>";
+      return;
+    }
+    state.results.forEach(function(s){
+      var r = s.recipe, rot = ((hashNum(r.id + "rot") % 7) - 3) * 0.8;
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "note " + noteColor(r);
+      b.style.setProperty("--rot", rot + "deg");
+      b.innerHTML =
+        '<span class="cat">' + (CAT_ICON[r.cat] || "🍽") + " " + esc(r.cat) + (r.ai ? ' <span class="ai-badge">AI</span>' : "") + "</span>" +
+        "<h3>" + esc(r.name) + "</h3>" +
+        '<span class="meta">⏱ ' + esc(r.time) + " 分鐘・" + esc(r.level) + "・" + esc(r.serve) + " 人份</span>" +
+        '<span class="have">✔ ' + esc(s.hit.join("、")) + (s.missing.length ? '<br><span class="miss">✘ 還缺 ' + esc(s.missing.join("、")) + "</span>" : "") + "</span>" +
+        '<span class="bottom"><span>符合 ' + Math.round(s.ratio * 100) + '%</span><span class="mini-stars">' + starsText(ratingOf(r)) + "</span></span>";
+      b.onclick = function(){ openDetail(r.id); };
+      wrap.appendChild(b);
+    });
+  }
+  function renderStats(){
+    var ids = Object.keys(state.ratings).filter(function(k){ return state.ratings[k] > 0; });
+    $("statRated").textContent = ids.length;
+    $("statPoints").textContent = ids.reduce(function(sum, k){ return sum + state.ratings[k]; }, 0);
+  }
+
+  /* ================= 詳情 ================= */
+  function findRecipe(id){
+    return RECIPES.concat(state.aiRecipes).filter(function(r){ return r.id === id; })[0];
+  }
+  function openDetail(id){
+    var r = findRecipe(id);
+    if(!r) return;
+    state.current = r;
+    var userCanon = state.ings.map(canon);
+    var ingHtml = r.main.map(function(m){ return haveIt(m, userCanon) ? '<span class="ok">✔ ' + esc(m) + "</span>" : '<span class="miss">✘ ' + esc(m) + "</span>"; }).join("");
+    var extraHtml = (r.extra || []).map(function(m){ return haveIt(m, userCanon) ? '<span class="ok">✔ ' + esc(m) + "</span>" : "<span>" + esc(m) + "</span>"; }).join("");
+    $("modal").className = "modal " + noteColor(r);
+    $("mBody").innerHTML =
+      '<div class="cat">' + (CAT_ICON[r.cat] || "🍽") + " " + esc(r.cat) + (r.ai ? "（AI 產生）" : "") + "</div>" +
+      '<h2 id="mTitle">' + esc(r.name) + "</h2>" +
+      '<div class="meta">⏱ ' + esc(r.time) + " 分鐘｜難度：" + esc(r.level) + "｜" + esc(r.serve) + " 人份</div>" +
+      "<h4>主要食材</h4><div class=\"ing-list\">" + ingHtml + "</div>" +
+      (extraHtml ? "<h4>配料（可有可無）</h4><div class=\"ing-list\">" + extraHtml + "</div>" : "") +
+      ((r.season || []).length ? "<h4>調味料</h4><div class=\"ing-list\">" + r.season.map(function(x){ return "<span>" + esc(x) + "</span>"; }).join("") + "</div>" : "") +
+      "<h4>做法</h4><ol>" + r.steps.map(function(x){ return "<li>" + esc(x) + "</li>"; }).join("") + "</ol>" +
+      (r.tip ? '<div class="tip">💡 ' + esc(r.tip) + "</div>" : "");
+    renderStars();
+    $("modalBg").classList.add("show");
+    $("mClose").focus();
+  }
+  function closeDetail(){ $("modalBg").classList.remove("show"); state.current = null; }
+  $("mClose").onclick = closeDetail;
+  $("mClose2").onclick = closeDetail;
+  $("modalBg").addEventListener("click", function(e){ if(e.target === this) closeDetail(); });
+  document.addEventListener("keydown", function(e){ if(e.key === "Escape" && state.current) closeDetail(); });
+
+  /* ================= 五星評分 ================= */
+  var RATE_WORDS = ["", "不太合胃口", "普普通通", "還不錯", "很好吃", "超讚，會再煮！"];
+  function renderStars(preview){
+    var r = state.current; if(!r) return;
+    var val = ratingOf(r), show = preview || val;
+    var box = $("mStars");
+    if(!box.children.length){
+      for(var i = 1; i <= 5; i++){
+        (function(n){
+          var b = document.createElement("button");
+          b.type = "button"; b.textContent = "★"; b.setAttribute("aria-label", n + " 顆星");
+          b.onmouseenter = function(){ renderStars(n); };
+          b.onfocus = function(){ renderStars(n); };
+          b.onclick = function(){ rate(state.current.id, n); };
+          box.appendChild(b);
+        })(i);
+      }
+      box.onmouseleave = function(){ renderStars(); };
+    }
+    Array.prototype.forEach.call(box.children, function(b, idx){ b.classList.toggle("on", idx < show); });
+    $("mRateText").textContent = show ? show + " 顆星・" + RATE_WORDS[show] + (preview && preview !== val ? "" : (val ? "（已給 " + val + " 點）" : "")) : "還沒評分，點星星給點數";
+  }
+  function rate(id, n){
+    var prev = state.ratings[id] || 0;
+    if(prev === n){ delete state.ratings[id]; toast("已取消評分"); }
+    else { state.ratings[id] = n; toast(prev ? "評分已改為 " + n + " 顆星" : "感謝評分！獲得 " + n + " 點"); }
+    save(STORE.ratings, state.ratings);
+    renderStars();
+    renderNotes();
+  }
+
+  /* ================= PDF（列印成 PDF） ================= */
+  function buildPrintHtml(r){
+    var userCanon = state.ings.map(canon);
+    var line = function(arr, mark){ return arr.map(function(m){ return mark && haveIt(m, userCanon) ? esc(m) + "（已有）" : esc(m); }).join("、"); };
+    var stars = ratingOf(r) ? "｜我的評分：" + "★★★★★".slice(0, ratingOf(r)) + "☆☆☆☆☆".slice(ratingOf(r)) : "";
+    return "<h1>" + esc(r.name) + "</h1>" +
+      '<div class="p-meta">' + esc(r.cat) + "｜" + esc(r.time) + " 分鐘｜難度：" + esc(r.level) + "｜" + esc(r.serve) + " 人份" + stars + "</div>" +
+      '<h3>主要食材</h3><div class="p-ing">' + line(r.main, true) + "</div>" +
+      ((r.extra || []).length ? '<h3>配料（可有可無）</h3><div class="p-ing">' + line(r.extra, true) + "</div>" : "") +
+      ((r.season || []).length ? '<h3>調味料</h3><div class="p-ing">' + line(r.season) + "</div>" : "") +
+      "<h3>做法</h3><ol>" + r.steps.map(function(x){ return "<li>" + esc(x) + "</li>"; }).join("") + "</ol>" +
+      (r.tip ? '<div class="p-tip">小提示：' + esc(r.tip) + "</div>" : "") +
+      '<div class="p-foot">由「冰箱便利貼食譜」產生｜製作：Mark Tsai（蔡豐全） tsaimark@gmail.com｜食譜僅供參考，請留意過敏原並確實煮熟。</div>';
+  }
+  function downloadPdf(){
+    var r = state.current; if(!r) return;
+    $("printArea").innerHTML = buildPrintHtml(r);
+    var oldTitle = document.title;
+    document.title = r.name + "_食譜";
+    var restore = function(){ document.title = oldTitle; window.removeEventListener("afterprint", restore); };
+    window.addEventListener("afterprint", restore);
+    toast("請在列印視窗選擇「另存為 PDF」");
+    setTimeout(function(){ window.print(); setTimeout(restore, 1000); }, 50);
+  }
+  $("mPdf").onclick = downloadPdf;
+
+  /* ================= 選用 BYOK AI ================= */
+  var api = load(STORE.api, {provider:"gemini", models:{}, keys:{}});
+  function syncApiFields(){
+    $("aiProvider").value = api.provider;
+    $("aiModel").value = (api.models && api.models[api.provider]) || AI_DEFAULT_MODEL[api.provider];
+    $("aiKey").value = (api.keys && api.keys[api.provider]) || "";
+  }
+  function persistApi(){
+    api.models = api.models || {}; api.keys = api.keys || {};
+    api.models[api.provider] = $("aiModel").value.trim() || AI_DEFAULT_MODEL[api.provider];
+    api.keys[api.provider] = $("aiKey").value.trim();
+    save(STORE.api, api);
+  }
+  $("aiProvider").onchange = function(){ api.provider = this.value; syncApiFields(); save(STORE.api, api); };
+  $("aiModel").onchange = persistApi;
+  $("aiKey").onchange = persistApi;
+  syncApiFields();
+
+  async function callLLM(provider, model, apiKey, prompt){
+    var url, headers, body, extract;
+    if(provider === "claude"){
+      url = "https://api.anthropic.com/v1/messages";
+      headers = {"content-type":"application/json", "x-api-key":apiKey, "anthropic-version":"2023-06-01", "anthropic-dangerous-direct-browser-access":"true"};
+      body = {model:model, max_tokens:6000, messages:[{role:"user", content:prompt}]};
+      extract = function(d){ return (d.content || []).filter(function(b){ return b.type === "text"; }).map(function(b){ return b.text; }).join(""); };
+    } else if(provider === "openai" || provider === "openrouter"){
+      url = provider === "openai" ? "https://api.openai.com/v1/chat/completions" : "https://openrouter.ai/api/v1/chat/completions";
+      headers = {"content-type":"application/json", "authorization":"Bearer " + apiKey};
+      body = {model:model, messages:[{role:"user", content:prompt}]};
+      extract = function(d){ return d.choices && d.choices[0] && d.choices[0].message && d.choices[0].message.content; };
+    } else {
+      url = "https://generativelanguage.googleapis.com/v1beta/models/" + encodeURIComponent(model) + ":generateContent";
+      headers = {"content-type":"application/json", "x-goog-api-key":apiKey};
+      body = {contents:[{parts:[{text:prompt}]}]};
+      extract = function(d){ var ps = (d.candidates && d.candidates[0] && d.candidates[0].content && d.candidates[0].content.parts) || []; return ps.map(function(p){ return p.text || ""; }).join(""); };
+    }
+    var res = await fetch(url, {method:"POST", headers:headers, body:JSON.stringify(body)});
+    var data = await res.json().catch(function(){ return {}; });
+    if(!res.ok) throw new Error((data.error && (data.error.message || data.error)) || ("HTTP " + res.status));
+    var t = extract(data);
+    if(!t) throw new Error("回應中沒有文字內容");
+    return t;
+  }
+  function parseJsonArray(raw){
+    var s = String(raw).replace(/```(?:json)?/g, "");
+    var a = s.indexOf("["), b = s.lastIndexOf("]");
+    if(a < 0 || b <= a) throw new Error("AI 回覆不是 JSON 陣列");
+    return JSON.parse(s.slice(a, b + 1));
+  }
+  function buildAiPrompt(){
+    return "你是台灣家常菜料理老師。使用者冰箱有這些食材：" + state.ings.join("、") + "。\n" +
+      "請設計 4 道適合在家做、以這些食材為主的創意料理（可另外假設家中有鹽、糖、醬油、油等基本調味料），使用繁體中文與台灣用語。\n" +
+      "只回傳 JSON 陣列，不要任何說明文字，每個元素格式：\n" +
+      '{"name":"菜名","time":分鐘數字,"level":"簡單|中等|進階","serve":人份數字,"main":["主要食材"],"extra":["可有可無的配料"],"season":["調味料"],"steps":["步驟1","步驟2"],"tip":"一句小提示"}\n' +
+      "main 請優先使用使用者提供的食材名稱，steps 3～6 步。";
+  }
+  async function generateAi(){
+    persistApi();
+    var key = api.keys[api.provider];
+    if(!key){ document.querySelector("details.ai-box").open = true; $("aiKey").focus(); toast("請先填入 API 金鑰"); return; }
+    if(!state.ings.length){ toast("請先輸入至少一樣食材"); return; }
+    var btn = $("aiBtn"); btn.disabled = true; btn.textContent = "✨ AI 撰寫中…";
+    try {
+      var raw = await callLLM(api.provider, api.models[api.provider], key, buildAiPrompt());
+      var arr = parseJsonArray(raw).filter(function(x){ return x && x.name && Array.isArray(x.main) && Array.isArray(x.steps); });
+      if(!arr.length) throw new Error("AI 沒有回傳可用的食譜");
+      var fresh = arr.map(function(x){
+        return {id:"ai-" + hashNum(x.name), ai:true, name:String(x.name), cat:"AI 創意", time:+x.time || 20, level:x.level || "簡單", serve:+x.serve || 2,
+          main:x.main.map(String), extra:(x.extra || []).map(String), season:(x.season || []).map(String), steps:x.steps.map(String), tip:x.tip ? String(x.tip) : ""};
+      });
+      var ids = fresh.map(function(r){ return r.id; });
+      state.aiRecipes = fresh.concat(state.aiRecipes.filter(function(r){ return ids.indexOf(r.id) < 0; })).slice(0, 40);
+      save(STORE.ai, state.aiRecipes);
+      var userCanon = state.ings.map(canon);
+      var aiScored = fresh.map(function(r){ var s = scoreRecipe(r, userCanon); if(!s.hit.length) s.ratio = 0; return s; });
+      var rest = sortResults(RECIPES.map(function(r){ return scoreRecipe(r, userCanon); }).filter(function(s){ return s.hit.length > 0; }));
+      state.results = aiScored.concat(rest).slice(0, Math.max(+$("limitSel").value, aiScored.length));
+      renderNotes();
+      toast("AI 新增了 " + fresh.length + " 張創意食譜便利貼");
+    } catch(e){
+      toast("AI 失敗：" + e.message + "，已改用內建食譜");
+      generate();
+    } finally {
+      btn.disabled = false; btn.textContent = "✨ AI 創意食譜";
+    }
+  }
+  $("aiBtn").onclick = generateAi;
+
+  /* ================= 啟動 ================= */
+  renderTags();
+  generate();
+
+  window._recipe = {state:state, RECIPES:RECIPES, generate:generate, openDetail:openDetail, rate:rate, buildPrintHtml:buildPrintHtml, downloadPdf:downloadPdf};
+})();
+</script>
+
+<script>
+/* ================= 頂部跑馬燈（獨立運作，共用工作區既有的公告 Google Sheet） ================= */
+(function () {
+  "use strict";
+  var MARQUEE_CHECK_URL = "https://script.google.com/macros/s/AKfycbwKX0DNNbY8y4nf90BFTHtxgfqJcHHcZasRrgycl4QAe52_hkjMWSkYk4xOsqU-JPCROw/exec";
+  var STORAGE_KEY = "fridgeRecipeNotesMarquee";
+  var REFRESH_MS = 20 * 60 * 1000;
+
+  var bar = document.getElementById("marqueeBar");
+  var track = document.getElementById("marqueeTrack");
+  var lastKey = null;
+
+  function loadCache() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); } catch (e) { return []; }
+  }
+  function saveCache(items) {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(items)); } catch (e) {}
+  }
+  function appendParsedText(container, text) {
+    var re = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
+    var lastIndex = 0, m;
+    while ((m = re.exec(text))) {
+      if (m.index > lastIndex) container.appendChild(document.createTextNode(text.slice(lastIndex, m.index)));
+      var a = document.createElement("a");
+      a.href = m[2];
+      a.textContent = m[1];
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.style.color = "inherit";
+      a.style.textDecoration = "underline";
+      container.appendChild(a);
+      lastIndex = re.lastIndex;
+    }
+    if (lastIndex < text.length) container.appendChild(document.createTextNode(text.slice(lastIndex)));
+  }
+  function buildTrackContent(items) {
+    var frag = document.createDocumentFragment();
+    function appendPass() {
+      items.forEach(function (item, idx) {
+        if (idx > 0) frag.appendChild(document.createTextNode("　★　"));
+        appendParsedText(frag, item);
+      });
+    }
+    appendPass();
+    frag.appendChild(document.createTextNode("　★　"));
+    appendPass();
+    return frag;
+  }
+  function render(items) {
+    if (!items || !items.length) return;
+    var key = JSON.stringify(items);
+    if (key === lastKey) return;
+    lastKey = key;
+    track.innerHTML = "";
+    track.appendChild(buildTrackContent(items));
+    bar.classList.add("show");
+    document.body.classList.add("has-marquee");
+    var width = track.scrollWidth / 2;
+    track.style.animationDuration = Math.max(width / 80, 10) + "s";
+  }
+  function fetchMarquee() {
+    fetch(MARQUEE_CHECK_URL, { method: "POST", body: JSON.stringify({ serial: "" }) })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (data && Array.isArray(data.marquee) && data.marquee.length) {
+          saveCache(data.marquee);
+          render(data.marquee);
+        }
+      })
+      .catch(function () {});
+  }
+
+  render(loadCache());
+  fetchMarquee();
+  setInterval(fetchMarquee, REFRESH_MS);
+})();
+</script>
+
+<script>
+/* ================= PWA 加入主畫面（獨立運作） ================= */
+(function () {
+  "use strict";
+  var deferredPrompt = null;
+  var btn = document.getElementById("installBtn");
+  var ua = navigator.userAgent || "";
+  var isIOSDevice = /iPad|iPhone|iPod/.test(ua) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  var isMacDesktop = /Macintosh/.test(ua) && !isIOSDevice;
+  var isSafariEngine = /^((?!chrome|crios|fxios|edgios|android).)*safari/i.test(ua);
+  var isStandalone = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || window.navigator.standalone === true;
+
+  function fallbackMessage() {
+    if (isIOSDevice) return "請點畫面上的「分享」圖示，選「加入主畫面」";
+    if (isMacDesktop && isSafariEngine) return "請用選單列「檔案」→「加入 Dock」（Safari 17 以上）";
+    return "目前瀏覽器不支援安裝，或已安裝過";
+  }
+  function notify(msg) {
+    var t = document.getElementById("toast");
+    if (!t) { window.alert(msg); return; }
+    t.textContent = msg;
+    t.classList.add("show");
+    clearTimeout(notify._timer);
+    notify._timer = setTimeout(function () { t.classList.remove("show"); }, 2400);
+  }
+
+  window.addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); deferredPrompt = e; });
+  window.addEventListener("appinstalled", function () { deferredPrompt = null; });
+
+  if (btn) {
+    if (isStandalone) { btn.style.display = "none"; }
+    else {
+      btn.addEventListener("click", function () {
+        if (!deferredPrompt) { notify(fallbackMessage()); return; }
+        try { deferredPrompt.prompt(); deferredPrompt.userChoice.then(function () { deferredPrompt = null; }); }
+        catch (e) { notify(fallbackMessage()); }
+      });
+    }
+  }
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function () { navigator.serviceWorker.register("service-worker.js").catch(function () {}); });
+  }
+})();
+</script>
+</body>
+</html>
