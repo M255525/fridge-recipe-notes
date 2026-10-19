@@ -4,7 +4,7 @@
 
 - 本機預覽：port **8830**（`.claude/launch.json` 的 `fridge-recipe-notes`）。
 - **目標客群：女性上班族**（2026-10-19 使用者指定）。視覺走乾燥玫瑰粉／奶油底、粉彩便利貼、紙膠帶（條紋／直紋／點點三種輪替）、手寫體 `LXGW WenKai TC`；文案用「下班」語氣；有「下班快手菜」料理時間篩選。改版面時維持這個調性，不要改回軟木板咖啡色。
-- 部署：**尚未建遠端、未上 GitHub Pages**（新工具先問過再上線）。無序號授權。
+- **部署**（2026-10-19 使用者說「要」）：公開 repo <https://github.com/M255525/fridge-recipe-notes>，GitHub Pages（Actions workflow，push 到 master 自動部署）<https://m255525.github.io/fridge-recipe-notes/>。已補 `github-pages` environment 的 master 分支規則。無序號授權。
 
 ## 架構重點
 - 預設值：`DEFAULT_INGREDIENTS`（雞蛋、番茄、洋蔥、豆腐、青蔥）、`PRESETS`（4 組快速範例）、`AI_DEFAULT_MODEL`。
